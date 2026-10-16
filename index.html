@@ -201,19 +201,32 @@
             </div>
             <div class="field">
               <label for="vehicle-make">Make <span class="zh">品牌</span></label>
-              <input id="vehicle-make" name="make" list="vehicle-makes" placeholder="e.g. Toyota / 例如 Toyota" autocomplete="off" required>
-              <datalist id="vehicle-makes">
-                <option value="Acura"><option value="Audi"><option value="BMW"><option value="Buick">
-                <option value="Cadillac"><option value="Chevrolet"><option value="Chrysler"><option value="Dodge">
-                <option value="Ford"><option value="GMC"><option value="Honda"><option value="Hyundai">
-                <option value="Jeep"><option value="Kia"><option value="Lexus"><option value="Mazda">
-                <option value="Mercedes-Benz"><option value="Mitsubishi"><option value="Nissan"><option value="Subaru">
-                <option value="Tesla"><option value="Toyota"><option value="Volkswagen"><option value="Volvo">
-              </datalist>
+              <select id="vehicle-make" name="makeChoice" required>
+                <option value="">Select make / 选择品牌</option>
+                <option>Acura</option><option>Audi</option><option>BMW</option><option>Buick</option>
+                <option>Cadillac</option><option>Chevrolet</option><option>Chrysler</option><option>Dodge</option>
+                <option>Ford</option><option>Genesis</option><option>GMC</option><option>Honda</option>
+                <option>Hyundai</option><option>Infiniti</option><option>Jaguar</option><option>Jeep</option>
+                <option>Kia</option><option>Land Rover</option><option>Lexus</option><option>Lincoln</option>
+                <option>Mazda</option><option>Mercedes-Benz</option><option>Mitsubishi</option><option>Nissan</option>
+                <option>Porsche</option><option>Ram</option><option>Subaru</option><option>Tesla</option>
+                <option>Toyota</option><option>Volkswagen</option><option>Volvo</option>
+                <option value="__other__">Other / 其他</option>
+              </select>
+              <div class="field" id="vehicle-make-other-field" hidden>
+                <label for="vehicle-make-other">Enter make <span class="zh">输入品牌</span></label>
+                <input id="vehicle-make-other" name="makeOther" placeholder="Enter vehicle make / 输入车辆品牌" autocomplete="off" disabled>
+              </div>
             </div>
             <div class="field">
               <label for="vehicle-model">Model <span class="zh">车型</span></label>
-              <input id="vehicle-model" name="model" placeholder="e.g. RAV4 / 例如 RAV4" autocomplete="off" required>
+              <select id="vehicle-model" name="modelChoice" required disabled>
+                <option value="">Select make first / 请先选择品牌</option>
+              </select>
+              <div class="field" id="vehicle-model-other-field" hidden>
+                <label for="vehicle-model-other">Enter model <span class="zh">输入车型</span></label>
+                <input id="vehicle-model-other" name="modelOther" placeholder="Enter vehicle model / 输入车辆型号" autocomplete="off" disabled>
+              </div>
             </div>
             <div class="field">
               <label for="vehicle-trim">Trim (optional) <span class="zh">款式（可选）</span></label>
@@ -331,6 +344,12 @@
     const secondAddress = document.querySelector("#second-address");
     const homeAddressField = document.querySelector("#home-address-field");
     const secondAddressField = document.querySelector("#second-address-field");
+    const vehicleMakeSelect = document.querySelector("#vehicle-make");
+    const vehicleMakeOtherField = document.querySelector("#vehicle-make-other-field");
+    const vehicleMakeOther = document.querySelector("#vehicle-make-other");
+    const vehicleModelSelect = document.querySelector("#vehicle-model");
+    const vehicleModelOtherField = document.querySelector("#vehicle-model-other-field");
+    const vehicleModelOther = document.querySelector("#vehicle-model-other");
     const supabaseConfig = window.SUPABASE_CONFIG || {};
     const supabaseClient = window.supabase && supabaseConfig.url && supabaseConfig.anonKey
       ? window.supabase.createClient(supabaseConfig.url, supabaseConfig.anonKey)
@@ -348,6 +367,39 @@
 
     const weekdayNames = ["Sun / 周日", "Mon / 周一", "Tue / 周二", "Wed / 周三", "Thu / 周四", "Fri / 周五", "Sat / 周六"];
     const monthNames = ["Jan / 1月", "Feb / 2月", "Mar / 3月", "Apr / 4月", "May / 5月", "Jun / 6月", "Jul / 7月", "Aug / 8月", "Sep / 9月", "Oct / 10月", "Nov / 11月", "Dec / 12月"];
+    const vehicleModels = {
+      Acura: ["ILX", "Integra", "MDX", "RDX", "TLX"],
+      Audi: ["A3", "A4", "A6", "Q3", "Q5", "Q7"],
+      BMW: ["2 Series", "3 Series", "5 Series", "X1", "X3", "X5"],
+      Buick: ["Enclave", "Encore", "Encore GX", "Envision"],
+      Cadillac: ["CT4", "CT5", "Escalade", "XT4", "XT5", "XT6"],
+      Chevrolet: ["Equinox", "Malibu", "Silverado", "Trailblazer", "Traverse", "Trax"],
+      Chrysler: ["300", "Pacifica", "Voyager"],
+      Dodge: ["Charger", "Durango", "Hornet"],
+      Ford: ["Bronco", "Escape", "Explorer", "F-150", "Maverick", "Mustang"],
+      Genesis: ["G70", "G80", "GV70", "GV80"],
+      GMC: ["Acadia", "Canyon", "Sierra", "Terrain", "Yukon"],
+      Honda: ["Accord", "Civic", "CR-V", "HR-V", "Odyssey", "Pilot"],
+      Hyundai: ["Elantra", "Kona", "Palisade", "Santa Fe", "Sonata", "Tucson"],
+      Infiniti: ["QX50", "QX60", "QX80"],
+      Jaguar: ["E-PACE", "F-PACE", "F-TYPE"],
+      Jeep: ["Cherokee", "Compass", "Grand Cherokee", "Wrangler"],
+      Kia: ["Carnival", "Forte", "Seltos", "Sorento", "Sportage", "Telluride"],
+      "Land Rover": ["Defender", "Discovery", "Range Rover", "Range Rover Sport"],
+      Lexus: ["ES", "GX", "NX", "RX", "UX"],
+      Lincoln: ["Aviator", "Corsair", "Nautilus", "Navigator"],
+      Mazda: ["CX-30", "CX-5", "CX-50", "Mazda3", "MX-5"],
+      "Mercedes-Benz": ["C-Class", "E-Class", "GLA", "GLC", "GLE", "GLS"],
+      Mitsubishi: ["Eclipse Cross", "Outlander", "Outlander PHEV"],
+      Nissan: ["Altima", "Frontier", "Kicks", "Pathfinder", "Rogue", "Sentra"],
+      Porsche: ["718", "911", "Cayenne", "Macan", "Panamera"],
+      Ram: ["1500", "2500", "3500"],
+      Subaru: ["Crosstrek", "Forester", "Impreza", "Outback", "WRX"],
+      Tesla: ["Model 3", "Model S", "Model X", "Model Y"],
+      Toyota: ["Camry", "Corolla", "Highlander", "Prius", "RAV4", "Sienna", "Tacoma"],
+      Volkswagen: ["Atlas", "Golf", "Jetta", "Tiguan"],
+      Volvo: ["S60", "XC40", "XC60", "XC90"]
+    };
 
     function addYearOptions() {
       const yearSelect = document.querySelector("#vehicle-year");
@@ -359,6 +411,53 @@
         yearSelect.append(option);
       }
     }
+
+    function updateModelOptions() {
+      const make = vehicleMakeSelect.value;
+      const customMake = make === "__other__";
+      vehicleMakeOtherField.hidden = !customMake;
+      vehicleMakeOther.disabled = !customMake;
+      vehicleMakeOther.required = customMake;
+      vehicleModelSelect.replaceChildren(new Option("Select model / 选择车型", ""));
+      vehicleModelOtherField.hidden = true;
+      vehicleModelOther.disabled = true;
+      vehicleModelOther.required = false;
+
+      if (!make) {
+        vehicleModelSelect.disabled = true;
+        vehicleModelSelect.required = false;
+        return;
+      }
+
+      if (customMake) {
+        vehicleModelSelect.add(new Option("Other / enter model / 其他（手动输入）", "__other__"));
+        vehicleModelSelect.value = "__other__";
+        vehicleModelSelect.disabled = true;
+        vehicleModelSelect.required = false;
+        vehicleModelOtherField.hidden = false;
+        vehicleModelOther.disabled = false;
+        vehicleModelOther.required = true;
+        return;
+      }
+
+      (vehicleModels[make] || []).forEach((model) => {
+        vehicleModelSelect.add(new Option(model, model));
+      });
+      vehicleModelSelect.add(new Option("Other / not listed / 未找到", "__other__"));
+      vehicleModelSelect.disabled = false;
+      vehicleModelSelect.required = true;
+    }
+
+    function updateCustomModelField() {
+      const customModel = vehicleMakeSelect.value === "__other__" || vehicleModelSelect.value === "__other__";
+      vehicleModelOtherField.hidden = !customModel;
+      vehicleModelOther.disabled = !customModel;
+      vehicleModelOther.required = customModel;
+    }
+
+    vehicleMakeSelect.addEventListener("change", updateModelOptions);
+    vehicleModelSelect.addEventListener("change", updateCustomModelField);
+    updateModelOptions();
 
     function formatDate(date) {
       return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
@@ -513,17 +612,23 @@
       const data = new FormData(form);
       const location = data.get("location");
       const address = location === "home" ? data.get("homeAddress") : data.get("secondAddress");
+      const makeChoice = data.get("makeChoice");
+      const modelChoice = data.get("modelChoice");
+      const vehicleMake = makeChoice === "__other__" ? data.get("makeOther").trim() : makeChoice;
+      const vehicleModel = makeChoice === "__other__" || modelChoice === "__other__"
+        ? data.get("modelOther").trim()
+        : modelChoice;
       const dateText = `${monthNames[selectedDate.getMonth()]} ${selectedDate.getDate()}, ${selectedDate.getFullYear()} (${weekdayNames[selectedDate.getDay()]})`;
       const timeHour = Number(selectedTime.slice(0, 2));
       const timeText = `${timeHour % 12 || 12}:00 ${timeHour >= 12 ? "PM" : "AM"} / ${timeHour >= 12 ? "下午" : "上午"} ${timeHour % 12 || 12}:00`;
-      const vehicleText = `${data.get("year")} ${data.get("make")} ${data.get("model")} ${data.get("trim")}`;
+      const vehicleText = [data.get("year"), vehicleMake, vehicleModel, data.get("trim")].filter(Boolean).join(" ");
 
       const { error } = await supabaseClient.rpc("create_appointment", {
         p_appointment_date: formatDate(selectedDate),
         p_appointment_time: selectedTime,
         p_vehicle_year: Number(data.get("year")),
-        p_vehicle_make: data.get("make"),
-        p_vehicle_model: data.get("model"),
+        p_vehicle_make: vehicleMake,
+        p_vehicle_model: vehicleModel,
         p_vehicle_trim: data.get("trim"),
         p_location_type: location,
         p_service_address: address,
