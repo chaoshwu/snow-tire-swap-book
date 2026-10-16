@@ -14,8 +14,9 @@ type AppointmentRecord = {
 };
 
 type TorqueSpec = {
-  torque_lb_ft: number;
-  torque_nm: number;
+  torque_lb_ft?: number;
+  torque_nm?: number;
+  torque_display?: string;
   source_name: string;
   source_url: string;
   verified_at: string;
@@ -68,7 +69,22 @@ async function findTorqueSpec(appointment: AppointmentRecord): Promise<TorqueSpe
     return rows[0] || null;
   }
 
-  return await query(appointment.vehicle_trim) || await query(null);
+  const exactSpec = await query(appointment.vehicle_trim) || await query(null);
+  if (exactSpec) return exactSpec;
+
+  const defaultParams = new URLSearchParams({
+    select: "torque_display,source_name,source_url,verified_at,notes",
+    vehicle_make: `eq.${appointment.vehicle_make}`,
+    vehicle_model: `eq.${appointment.vehicle_model}`,
+    limit: "1",
+  });
+  const defaultResponse = await fetch(`${supabaseUrl}/rest/v1/vehicle_torque_defaults?${defaultParams.toString()}`, { headers });
+  if (!defaultResponse.ok) {
+    console.error("Default torque lookup failed with status", defaultResponse.status);
+    return null;
+  }
+  const defaultRows = await defaultResponse.json() as TorqueSpec[];
+  return defaultRows[0] || null;
 }
 
 Deno.serve(async (request: Request) => {
@@ -117,7 +133,7 @@ Deno.serve(async (request: Request) => {
     `Time: ${time}`,
     `Vehicle: ${vehicle}`,
     torqueSpec
-      ? `Wheel lug torque: ${torqueSpec.torque_lb_ft} lb-ft (${torqueSpec.torque_nm} Nm)`
+      ? `Wheel lug torque: ${torqueSpec.torque_display || `${torqueSpec.torque_lb_ft} lb-ft (${torqueSpec.torque_nm} Nm)`}`
       : "Wheel lug torque: Not confirmed from the OEM data table",
     ...(torqueSpec
       ? [
