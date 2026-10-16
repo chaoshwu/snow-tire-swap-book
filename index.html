@@ -55,6 +55,7 @@
     .section-number { display: grid; place-items: center; width: 25px; height: 25px; border-radius: 50%; background: var(--soft-green); color: var(--green); font-size: 12px; }
     .field-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 15px 13px; }
     .field { display: flex; min-width: 0; flex-direction: column; gap: 7px; }
+    .field[hidden] { display: none !important; }
     .field.full { grid-column: 1 / -1; }
     label, .group-label { color: #42463f; font-size: 12px; font-weight: 700; }
     .en { color: var(--muted); font-size: 10px; font-weight: 500; }
@@ -208,7 +209,7 @@
                 <option>Ford</option><option>Genesis</option><option>GMC</option><option>Honda</option>
                 <option>Hyundai</option><option>Infiniti</option><option>Jaguar</option><option>Jeep</option>
                 <option>Kia</option><option>Land Rover</option><option>Lexus</option><option>Lincoln</option>
-                <option>Mazda</option><option value="Mercedes-Benz">Mercedes-Benz / 奔驰</option><option>Mitsubishi</option><option>Nissan</option>
+                <option>Mazda</option><option>Mercedes-Benz</option><option>Mitsubishi</option><option>Nissan</option>
                 <option>Porsche</option><option>Ram</option><option>Subaru</option><option>Tesla</option>
                 <option>Toyota</option><option>Volkswagen</option><option>Volvo</option>
                 <option value="__other__">Other / 其他</option>
@@ -433,13 +434,9 @@
       }
 
       if (customMake) {
-        vehicleModelSelect.add(new Option("Other / enter model / 其他（手动输入）", "__other__"));
-        vehicleModelSelect.value = "__other__";
-        vehicleModelSelect.disabled = true;
-        vehicleModelSelect.required = false;
-        vehicleModelOtherField.hidden = false;
-        vehicleModelOther.disabled = false;
-        vehicleModelOther.required = true;
+        vehicleModelSelect.add(new Option("Other / not listed / 未找到", "__other__"));
+        vehicleModelSelect.disabled = false;
+        vehicleModelSelect.required = true;
         return;
       }
 
