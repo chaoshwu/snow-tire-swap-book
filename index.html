@@ -406,7 +406,7 @@
     function addYearOptions() {
       const yearSelect = document.querySelector("#vehicle-year");
       const currentYear = new Date().getFullYear();
-      for (let year = currentYear; year >= currentYear - 35; year -= 1) {
+      for (let year = currentYear; year >= 2008; year -= 1) {
         const option = document.createElement("option");
         option.value = String(year);
         option.textContent = String(year);
