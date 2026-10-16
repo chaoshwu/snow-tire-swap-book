@@ -1,0 +1,590 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f6f5ef">
+  <title>Tire Booking | Northline Tire</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #20231f;
+      --muted: #73776f;
+      --paper: #f6f5ef;
+      --surface: #fffefa;
+      --line: #dedfd7;
+      --green: #316b50;
+      --green-dark: #214b38;
+      --lime: #d7ec78;
+      --orange: #e36a3c;
+      --soft-green: #edf2e9;
+      font-family: "DM Sans", "Noto Sans SC", sans-serif;
+      font-synthesis: none;
+      text-rendering: optimizeLegibility;
+    }
+
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--paper); color: var(--ink); }
+    button, input, select { font: inherit; }
+    button, select { cursor: pointer; }
+    .topbar {
+      min-height: 72px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 clamp(20px, 6vw, 88px);
+      border-bottom: 1px solid rgba(32, 35, 31, .1);
+    }
+    .brand { display: flex; gap: 11px; align-items: center; font-size: 15px; font-weight: 800; }
+    .brand-mark { display: grid; place-items: center; width: 31px; height: 31px; border-radius: 50%; color: var(--lime); background: var(--green-dark); font-size: 16px; }
+    .topbar-note { color: var(--muted); font-size: 13px; }
+    main { width: min(1120px, calc(100% - 40px)); margin: 35px auto 70px; }
+    .intro { display: flex; align-items: end; justify-content: space-between; gap: 24px; margin-bottom: 25px; }
+    .eyebrow { color: var(--green); font-size: 11px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase; }
+    h1 { margin: 9px 0 0; font-size: clamp(28px, 4vw, 42px); line-height: 1.2; letter-spacing: 0; }
+    .intro-copy { max-width: 320px; margin: 0 0 4px; color: var(--muted); font-size: 14px; line-height: 1.7; }
+    .booking-layout { display: grid; grid-template-columns: minmax(0, 1fr) 310px; align-items: start; gap: 20px; }
+    form { min-width: 0; }
+    .form-panel, .side-panel { border: 1px solid var(--line); border-radius: 7px; background: var(--surface); }
+    .form-panel { padding: 24px 27px 27px; }
+    .section-heading { display: flex; align-items: center; gap: 11px; margin: 0 0 19px; font-size: 16px; font-weight: 700; }
+    .section-heading .en { display: block; margin-top: 2px; color: var(--muted); font-size: 10px; font-weight: 500; }
+    .section-number { display: grid; place-items: center; width: 25px; height: 25px; border-radius: 50%; background: var(--soft-green); color: var(--green); font-size: 12px; }
+    .field-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 15px 13px; }
+    .field { display: flex; min-width: 0; flex-direction: column; gap: 7px; }
+    .field.full { grid-column: 1 / -1; }
+    label, .group-label { color: #42463f; font-size: 12px; font-weight: 700; }
+    .en { color: var(--muted); font-size: 10px; font-weight: 500; }
+    .field label .en { margin-left: 5px; }
+    .bilingual-copy .en { display: block; margin-top: 4px; line-height: 1.55; }
+    .group-label .en { margin-left: 5px; }
+    .zh { color: var(--muted); font-size: 10px; font-weight: 500; }
+    .field label .zh, .group-label .zh { margin-left: 5px; }
+    .zh-copy { display: block; margin-top: 4px; line-height: 1.55; }
+    .section-heading .zh, .side-title .zh { display: block; margin-top: 3px; }
+    .choice-text .zh { display: block; margin: 2px 0 0; }
+    input, select {
+      width: 100%; height: 43px; padding: 0 12px; border: 1px solid var(--line); border-radius: 4px;
+      outline: none; background: #fff; color: var(--ink); font-size: 14px;
+    }
+    input::placeholder { color: #9a9c94; }
+    input:focus, select:focus { border-color: var(--green); box-shadow: 0 0 0 3px rgba(49, 107, 80, .12); }
+    .divider { height: 1px; margin: 25px 0 22px; background: var(--line); }
+    .address-choice { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin: 10px 0 15px; }
+    .choice { position: relative; }
+    .choice input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+    .choice label {
+      display: flex; min-height: 48px; align-items: center; gap: 9px; padding: 10px 12px;
+      border: 1px solid var(--line); border-radius: 4px; background: #fff; cursor: pointer;
+      font-size: 12px; transition: border-color .15s, background .15s;
+    }
+    .choice label::before { width: 14px; height: 14px; flex: 0 0 14px; border: 1px solid #a8aca3; border-radius: 50%; content: ""; }
+    .choice input:checked + label { border-color: var(--green); background: var(--soft-green); }
+    .choice input:checked + label::before { border: 4px solid var(--green); background: #fff; }
+    .choice input:focus-visible + label { outline: 3px solid rgba(49, 107, 80, .2); }
+    .address-field[hidden] { display: none; }
+    .address-hint { margin: 0 0 12px; color: var(--muted); font-size: 12px; }
+    .calendar-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 8px 0 12px; }
+    .calendar-toolbar strong { font-size: 14px; }
+    .calendar-toolbar button { display: grid; width: 34px; aspect-ratio: 1; place-items: center; border: 1px solid var(--line); border-radius: 4px; background: #fff; color: var(--ink); }
+    .calendar-toolbar button:disabled { color: #a8aaa4; cursor: not-allowed; }
+    .weekday-grid, .date-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 5px; }
+    .weekday-grid { margin-bottom: 5px; }
+    .weekday-grid span { display: grid; min-height: 32px; place-content: center; color: var(--muted); font-size: 10px; font-weight: 700; text-align: center; }
+    .weekday-grid .zh { font-size: 9px; }
+    .date-button, .time-button {
+      border: 1px solid var(--line); border-radius: 4px; background: #fff; color: var(--ink);
+      transition: background .15s, border-color .15s, color .15s;
+    }
+    .date-button { display: grid; width: 100%; max-width: 48px; min-height: 42px; aspect-ratio: 1; place-items: center; justify-self: center; padding: 0; }
+    .date-button .date { font-size: 13px; font-weight: 600; }
+    .date-button:disabled { border-color: transparent; background: transparent; color: #b5b7b0; cursor: default; }
+    .date-button:disabled:hover { border-color: transparent; }
+    .date-button[aria-pressed="true"], .time-button[aria-pressed="true"] { border-color: var(--green); background: var(--green); color: #fff; }
+    .date-button[aria-pressed="true"] .date { color: #fff; }
+    .date-button:hover:not([aria-pressed="true"]), .time-button:hover:not([aria-pressed="true"]) { border-color: var(--green); }
+    .availability-label { display: flex; align-items: center; gap: 7px; margin: 18px 0 10px; color: var(--green-dark); font-size: 12px; font-weight: 700; }
+    .availability-dot { width: 7px; height: 7px; border-radius: 50%; background: #63a975; }
+    .time-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; }
+    .time-button { min-height: 45px; padding: 6px 3px; font-size: 11px; }
+    .time-button .zh { display: block; margin-top: 2px; }
+    .time-button[aria-pressed="true"] .zh { color: rgba(255, 255, 255, .8); }
+    .time-button:disabled { border-color: #e4e4df; background: #f0f0ec; color: #85877f; cursor: not-allowed; text-decoration: line-through; }
+    .section-note { margin: 9px 0 0; color: var(--muted); font-size: 11px; line-height: 1.5; }
+    .submit-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-top: 23px; }
+    .submit-note { max-width: 265px; margin: 0; color: var(--muted); font-size: 11px; line-height: 1.55; }
+    .submit-button { display: inline-flex; min-height: 46px; align-items: center; justify-content: center; gap: 15px; padding: 0 19px; border: 0; border-radius: 4px; background: var(--green-dark); color: white; font-size: 13px; font-weight: 700; }
+    .submit-button:hover { background: #183c2c; }
+    .submit-button:focus-visible { outline: 3px solid rgba(49, 107, 80, .3); outline-offset: 2px; }
+    .side-panel { overflow: hidden; }
+    .side-image { position: relative; min-height: 204px; background: #25332b; }
+    .side-image img { display: block; width: 100%; height: 204px; object-fit: cover; }
+    .image-label { position: absolute; right: 12px; bottom: 12px; padding: 6px 9px; border-radius: 3px; background: var(--lime); color: var(--green-dark); font-size: 10px; font-weight: 700; }
+    .side-content { padding: 20px; }
+    .side-title { margin: 0; font-size: 16px; }
+    .side-title .en, .side-title .zh { display: block; margin-top: 3px; }
+    .side-subtitle { margin: 5px 0 16px; color: var(--muted); font-size: 12px; }
+    .hours-list { display: grid; gap: 11px; }
+    .hours-row { display: flex; justify-content: space-between; gap: 8px; font-size: 12px; }
+    .hours-row span:first-child { color: var(--muted); }
+    .hours-row strong { font-weight: 600; }
+    .side-rule { height: 1px; margin: 16px 0; background: var(--line); }
+    .service-note { display: flex; align-items: flex-start; gap: 9px; color: #555a51; font-size: 11px; line-height: 1.6; }
+    .service-note b { color: var(--orange); font-size: 14px; line-height: 1; }
+    .confirmation { display: none; margin-top: 16px; padding: 17px; border: 1px solid #b8d0b7; border-radius: 4px; background: var(--soft-green); }
+    .confirmation.visible { display: block; }
+    .confirmation h2 { margin: 0 0 7px; font-size: 15px; }
+    .confirmation p { margin: 4px 0; color: #485148; font-size: 12px; line-height: 1.6; overflow-wrap: anywhere; }
+    .confirmation .demo-note { margin-top: 10px; color: var(--muted); font-size: 11px; }
+    .form-error { display: none; margin: 14px 0 0; color: #a33e28; font-size: 12px; }
+    .form-error.visible { display: block; }
+    footer { width: min(1120px, calc(100% - 40px)); margin: 0 auto 28px; color: var(--muted); font-size: 11px; }
+    @media (max-width: 820px) {
+      main { margin-top: 25px; }
+      .booking-layout { grid-template-columns: minmax(0, 1fr) 260px; gap: 14px; }
+      .form-panel { padding: 21px 19px; }
+      .time-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+      .date-grid { gap: 4px; }
+    }
+    @media (max-width: 650px) {
+      .topbar { min-height: 62px; padding: 0 18px; }
+      .topbar-note { max-width: 130px; text-align: right; font-size: 11px; }
+      main { width: calc(100% - 28px); margin: 23px auto 42px; }
+      .intro { align-items: flex-start; flex-direction: column; gap: 8px; margin-bottom: 18px; }
+      h1 { font-size: 29px; }
+      .intro-copy { max-width: 100%; font-size: 13px; }
+      .booking-layout { grid-template-columns: 1fr; }
+      .form-panel { padding: 19px 16px; }
+      .side-panel { display: grid; grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr); }
+      .side-image, .side-image img { height: 100%; min-height: 190px; }
+      .side-content { padding: 16px 14px; }
+      .side-title { font-size: 14px; }
+      .hours-row { font-size: 11px; }
+      .field-grid { gap: 13px 9px; }
+      .weekday-grid, .date-grid { gap: 3px; }
+      .date-button { max-width: 38px; min-height: 36px; }
+      .time-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+      .submit-row { align-items: stretch; flex-direction: column; }
+      .submit-note { max-width: 100%; }
+      .submit-button { width: 100%; }
+      footer { width: calc(100% - 28px); }
+    }
+    @media (max-width: 390px) {
+      .field-grid { grid-template-columns: 1fr; }
+      .field.full { grid-column: auto; }
+      .side-panel { grid-template-columns: 1fr; }
+      .side-image, .side-image img { height: 150px; min-height: 150px; }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand"><span class="brand-mark" aria-hidden="true">N</span><span>NORTHLINE TIRE</span></div>
+    <div class="topbar-note">Seasonal tire change · Mobile service <span class="zh zh-copy">季节换胎 · 上门预约</span></div>
+  </header>
+
+  <main>
+    <section class="intro" aria-labelledby="page-title">
+      <div>
+        <div class="eyebrow">SEASONAL TIRE CHANGE · 季节换胎</div>
+        <h1 id="page-title">Tire change, on your time.<span class="zh zh-copy">把换胎时间，安排妥当。</span></h1>
+      </div>
+      <p class="intro-copy bilingual-copy">Enter your vehicle and service address, then choose a time that works for you. Weekend appointments are available.<span class="zh zh-copy">填写车辆和服务地点，再挑一个方便的时间。周末时段也开放预约。</span></p>
+    </section>
+
+    <div class="booking-layout">
+      <form id="booking-form" class="form-panel">
+        <section aria-labelledby="vehicle-heading">
+          <h2 class="section-heading" id="vehicle-heading"><span class="section-number">01</span><span>Vehicle<span class="zh">车辆信息</span></span></h2>
+          <div class="field-grid">
+            <div class="field">
+              <label for="vehicle-year">Year <span class="zh">年份</span></label>
+              <select id="vehicle-year" name="year" required><option value="">Select year / 选择年份</option></select>
+            </div>
+            <div class="field">
+              <label for="vehicle-make">Make <span class="zh">品牌</span></label>
+              <input id="vehicle-make" name="make" list="vehicle-makes" placeholder="e.g. Toyota / 例如 Toyota" autocomplete="off" required>
+              <datalist id="vehicle-makes">
+                <option value="Acura"><option value="Audi"><option value="BMW"><option value="Buick">
+                <option value="Cadillac"><option value="Chevrolet"><option value="Chrysler"><option value="Dodge">
+                <option value="Ford"><option value="GMC"><option value="Honda"><option value="Hyundai">
+                <option value="Jeep"><option value="Kia"><option value="Lexus"><option value="Mazda">
+                <option value="Mercedes-Benz"><option value="Mitsubishi"><option value="Nissan"><option value="Subaru">
+                <option value="Tesla"><option value="Toyota"><option value="Volkswagen"><option value="Volvo">
+              </datalist>
+            </div>
+            <div class="field">
+              <label for="vehicle-model">Model <span class="zh">车型</span></label>
+              <input id="vehicle-model" name="model" placeholder="e.g. RAV4 / 例如 RAV4" autocomplete="off" required>
+            </div>
+            <div class="field">
+              <label for="vehicle-trim">Trim (optional) <span class="zh">款式（可选）</span></label>
+              <input id="vehicle-trim" name="trim" placeholder="e.g. XLE AWD / 例如 XLE AWD" autocomplete="off">
+            </div>
+          </div>
+        </section>
+
+        <div class="divider"></div>
+
+        <section aria-labelledby="contact-heading">
+          <h2 class="section-heading" id="contact-heading"><span class="section-number">02</span><span>Contact details<span class="zh">联系方式</span></span></h2>
+          <div class="field-grid">
+            <div class="field">
+              <label for="customer-name">Full name <span class="zh">姓名</span></label>
+              <input id="customer-name" name="customerName" autocomplete="name" required>
+            </div>
+            <div class="field">
+              <label for="customer-phone">Phone <span class="zh">电话</span></label>
+              <input id="customer-phone" name="customerPhone" type="tel" autocomplete="tel" required>
+            </div>
+            <div class="field full">
+              <label for="customer-email">Email (optional) <span class="zh">电子邮箱（可选）</span></label>
+              <input id="customer-email" name="customerEmail" type="email" autocomplete="email">
+            </div>
+          </div>
+        </section>
+
+        <div class="divider"></div>
+
+        <section aria-labelledby="location-heading">
+          <h2 class="section-heading" id="location-heading"><span class="section-number">03</span><span>Service address<span class="zh">服务地点</span></span></h2>
+          <p class="group-label">Choose a service address <span class="zh">选择本次换胎地点</span></p>
+          <div class="address-choice" role="radiogroup" aria-label="Service address / 服务地点">
+            <div class="choice"><input id="location-home" type="radio" name="location" value="home" checked><label for="location-home"><span aria-hidden="true">⌂</span><span class="choice-text">Home address<span class="zh">家庭地址</span></span></label></div>
+            <div class="choice"><input id="location-second" type="radio" name="location" value="second"><label for="location-second"><span aria-hidden="true">＋</span><span class="choice-text">Second address<span class="zh">第二地点</span></span></label></div>
+          </div>
+          <p class="address-hint bilingual-copy">Add both addresses and choose where this appointment should take place.<span class="zh zh-copy">可填写两个地点，预约时选择本次服务地址。</span></p>
+          <div class="field address-field" id="home-address-field">
+            <label for="home-address">Home address <span class="zh">家庭地址</span></label>
+            <input id="home-address" name="homeAddress" placeholder="Street, city, ZIP / 街道、城市、邮编" autocomplete="street-address" required>
+          </div>
+          <div class="field address-field" id="second-address-field" hidden>
+            <label for="second-address">Second address <span class="zh">第二地点地址</span></label>
+            <input id="second-address" name="secondAddress" placeholder="Street, city, ZIP / 街道、城市、邮编" autocomplete="street-address" disabled>
+          </div>
+        </section>
+
+        <div class="divider"></div>
+
+        <section aria-labelledby="schedule-heading">
+          <h2 class="section-heading" id="schedule-heading"><span class="section-number">04</span><span>Appointment<span class="zh">预约时间</span></span></h2>
+          <p class="group-label">Choose a date <span class="zh">选择日期</span></p>
+          <div class="calendar-toolbar">
+            <button id="previous-month" type="button" aria-label="Previous month / 上个月">←</button>
+            <strong id="calendar-month" aria-live="polite"></strong>
+            <button id="next-month" type="button" aria-label="Next month / 下个月">→</button>
+          </div>
+          <div class="weekday-grid" aria-hidden="true">
+            <span>Mon<span class="zh">周一</span></span><span>Tue<span class="zh">周二</span></span>
+            <span>Wed<span class="zh">周三</span></span><span>Thu<span class="zh">周四</span></span>
+            <span>Fri<span class="zh">周五</span></span><span>Sat<span class="zh">周六</span></span>
+            <span>Sun<span class="zh">周日</span></span>
+          </div>
+          <div class="date-grid" id="date-grid" role="group" aria-label="Available dates / 可预约日期"></div>
+          <div class="availability-label"><span class="availability-dot" aria-hidden="true"></span><span id="selected-date-label">Available times / 可预约时段</span></div>
+          <div class="time-grid" id="time-grid" role="group" aria-label="Available times / 可预约时间"></div>
+          <p class="section-note">Wed–Fri 5:00–7:00 PM · Sat–Sun 8:00 AM–7:00 PM<br>周三至周五 5:00–7:00 PM · 周六、周日 8:00 AM–7:00 PM</p>
+          <p class="section-note">Appointments through Dec 31 / 预约开放至12月31日</p>
+          <p class="section-note" id="database-status" role="status">Booking system is not connected yet. / 预约系统尚未连接。</p>
+        </section>
+
+        <p class="form-error" id="form-error" role="alert"></p>
+        <div class="confirmation" id="confirmation" role="status" aria-live="polite"></div>
+        <div class="submit-row">
+          <p class="submit-note">Your contact details and address are only used to arrange this appointment.<br>联系方式和地址仅用于安排本次预约。</p>
+          <button class="submit-button" type="submit">Book appointment / 确认预约 <span aria-hidden="true">→</span></button>
+        </div>
+      </form>
+
+      <aside class="side-panel" aria-label="Appointment hours / 预约时段信息">
+        <div class="side-image">
+          <img src="https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?auto=format&fit=crop&w=900&q=85" alt="汽车维修工位与车辆 / Vehicle in an auto repair shop" loading="eager">
+          <span class="image-label">WINTER READY</span>
+        </div>
+        <div class="side-content">
+          <h2 class="side-title">Appointment hours<span class="zh">可预约时间</span></h2>
+          <p class="side-subtitle">Choose a date and time that works for you<br>挑选适合你的日期与时段</p>
+          <div class="hours-list">
+            <div class="hours-row"><span>Mon–Tue<br>周一、周二</span><strong>Unavailable<br>暂停预约</strong></div>
+              <div class="hours-row"><span>Wed–Fri<br>周三至周五</span><strong>5:00 — 7:00 PM</strong></div>
+              <div class="hours-row"><span>Sat–Sun<br>周六、周日</span><strong>8:00 AM — 7:00 PM</strong></div>
+          </div>
+          <div class="side-rule"></div>
+          <div class="service-note"><b aria-hidden="true">i</b><span>Please verify your vehicle details and address so the technician can prepare.<br>请核对车型款式和地址，确保技师能为你的车辆做好准备。</span></div>
+        </div>
+      </aside>
+    </div>
+  </main>
+
+  <footer>Northline Tire · Seasonal tire booking / 季节换胎预约</footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js"></script>
+  <script>
+    const form = document.querySelector("#booking-form");
+    const dateGrid = document.querySelector("#date-grid");
+    const timeGrid = document.querySelector("#time-grid");
+    const selectedDateLabel = document.querySelector("#selected-date-label");
+    const calendarMonthLabel = document.querySelector("#calendar-month");
+    const previousMonthButton = document.querySelector("#previous-month");
+    const nextMonthButton = document.querySelector("#next-month");
+    const confirmation = document.querySelector("#confirmation");
+    const formError = document.querySelector("#form-error");
+    const databaseStatus = document.querySelector("#database-status");
+    const homeAddress = document.querySelector("#home-address");
+    const secondAddress = document.querySelector("#second-address");
+    const homeAddressField = document.querySelector("#home-address-field");
+    const secondAddressField = document.querySelector("#second-address-field");
+    const supabaseConfig = window.SUPABASE_CONFIG || {};
+    const supabaseClient = window.supabase && supabaseConfig.url && supabaseConfig.anonKey
+      ? window.supabase.createClient(supabaseConfig.url, supabaseConfig.anonKey)
+      : null;
+    let selectedDate = null;
+    let selectedTime = null;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const firstBookableDate = new Date(today);
+    firstBookableDate.setDate(firstBookableDate.getDate() + 1);
+    const lastBookableDate = new Date(today.getFullYear(), 11, 31);
+    const firstCalendarMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+    const lastCalendarMonth = new Date(today.getFullYear(), 11, 1);
+    let visibleMonth = new Date(firstCalendarMonth);
+
+    const weekdayNames = ["Sun / 周日", "Mon / 周一", "Tue / 周二", "Wed / 周三", "Thu / 周四", "Fri / 周五", "Sat / 周六"];
+    const monthNames = ["Jan / 1月", "Feb / 2月", "Mar / 3月", "Apr / 4月", "May / 5月", "Jun / 6月", "Jul / 7月", "Aug / 8月", "Sep / 9月", "Oct / 10月", "Nov / 11月", "Dec / 12月"];
+
+    if (supabaseClient) {
+      databaseStatus.textContent = "Checking appointment availability… / 正在查询可预约时段…";
+    } else {
+      databaseStatus.textContent = "Add your Supabase project URL and anon key to supabase-config.js to enable bookings. / 请在 supabase-config.js 中填写 Supabase URL 和 anon key。";
+    }
+
+    function addYearOptions() {
+      const yearSelect = document.querySelector("#vehicle-year");
+      const currentYear = new Date().getFullYear();
+      for (let year = currentYear; year >= currentYear - 35; year -= 1) {
+        const option = document.createElement("option");
+        option.value = String(year);
+        option.textContent = String(year);
+        yearSelect.append(option);
+      }
+    }
+
+    function formatDate(date) {
+      return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+    }
+
+    function renderDates() {
+      dateGrid.replaceChildren();
+      const monthStart = new Date(visibleMonth.getFullYear(), visibleMonth.getMonth(), 1);
+      const daysInMonth = new Date(visibleMonth.getFullYear(), visibleMonth.getMonth() + 1, 0).getDate();
+      const leadingDays = (monthStart.getDay() + 6) % 7;
+      const englishMonth = new Intl.DateTimeFormat("en-US", { month: "long", year: "numeric" }).format(visibleMonth);
+      const chineseMonth = new Intl.DateTimeFormat("zh-CN", { month: "long", year: "numeric" }).format(visibleMonth);
+      calendarMonthLabel.textContent = `${englishMonth} / ${chineseMonth}`;
+      previousMonthButton.disabled = visibleMonth <= firstCalendarMonth;
+      nextMonthButton.disabled = visibleMonth >= lastCalendarMonth;
+
+      for (let index = 0; index < leadingDays; index += 1) {
+        const spacer = document.createElement("span");
+        spacer.className = "calendar-empty";
+        spacer.setAttribute("aria-hidden", "true");
+        dateGrid.append(spacer);
+      }
+
+      for (let dayOfMonth = 1; dayOfMonth <= daysInMonth; dayOfMonth += 1) {
+        const date = new Date(visibleMonth.getFullYear(), visibleMonth.getMonth(), dayOfMonth);
+        const weekday = date.getDay();
+        const isBookableWeekday = [0, 3, 4, 5, 6].includes(weekday);
+        const isWithinBookingWindow = date >= firstBookableDate && date <= lastBookableDate;
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "date-button";
+        button.dataset.date = formatDate(date);
+        button.setAttribute("aria-pressed", String(Boolean(selectedDate && formatDate(selectedDate) === button.dataset.date)));
+        button.disabled = !isBookableWeekday || !isWithinBookingWindow;
+        button.innerHTML = `<span class="date">${dayOfMonth}</span>`;
+        button.setAttribute("aria-label", `${new Intl.DateTimeFormat("en-US", { weekday: "long", month: "long", day: "numeric" }).format(date)} / ${weekdayNames[weekday]}${button.disabled ? ", unavailable" : ", available"}`);
+        button.addEventListener("click", () => selectDate(date, button));
+        dateGrid.append(button);
+      }
+
+      if (!selectedDate) {
+        const firstAvailable = dateGrid.querySelector(".date-button:not(:disabled)");
+        if (firstAvailable) selectDate(new Date(`${firstAvailable.dataset.date}T00:00:00`), firstAvailable);
+        else {
+          selectedDateLabel.textContent = "No dates available / 暂无可预约日期";
+          timeGrid.replaceChildren();
+        }
+      }
+    }
+
+    function selectDate(date, button) {
+      selectedDate = date;
+      selectedTime = null;
+      dateGrid.querySelectorAll("button").forEach((item) => item.setAttribute("aria-pressed", String(item === button)));
+      selectedDateLabel.textContent = `${monthNames[date.getMonth()]} ${date.getDate()} · ${weekdayNames[date.getDay()]}`;
+      renderTimes(date);
+    }
+
+    function moveMonth(offset) {
+      const nextVisibleMonth = new Date(visibleMonth.getFullYear(), visibleMonth.getMonth() + offset, 1);
+      if (nextVisibleMonth < firstCalendarMonth || nextVisibleMonth > lastCalendarMonth) return;
+      visibleMonth = nextVisibleMonth;
+      if (selectedDate && (selectedDate.getFullYear() !== visibleMonth.getFullYear() || selectedDate.getMonth() !== visibleMonth.getMonth())) {
+        selectedDate = null;
+        selectedTime = null;
+        selectedDateLabel.textContent = "Choose a date / 选择日期";
+        timeGrid.replaceChildren();
+      }
+      renderDates();
+    }
+
+    previousMonthButton.addEventListener("click", () => moveMonth(-1));
+    nextMonthButton.addEventListener("click", () => moveMonth(1));
+
+    async function renderTimes(date) {
+      timeGrid.replaceChildren();
+      const day = date.getDay();
+      const startHour = day === 0 || day === 6 ? 8 : 17;
+      let bookedSlots = new Set();
+      let availabilityError = null;
+
+      if (supabaseClient) {
+        const dateKey = formatDate(date);
+        const { data, error } = await supabaseClient.rpc("get_booked_slots", {
+          p_start_date: dateKey,
+          p_end_date: dateKey
+        });
+        if (selectedDate && formatDate(selectedDate) !== dateKey) return;
+        if (error) {
+          availabilityError = error;
+          databaseStatus.textContent = "Could not load availability. Please try again. / 无法加载时段，请重试。";
+        } else {
+          bookedSlots = new Set(data.map((slot) => String(slot.appointment_time).slice(0, 5)));
+          databaseStatus.textContent = "Live availability from Supabase. / 时段已连接 Supabase 实时查询。";
+        }
+      }
+
+      const endHour = 18;
+      for (let hour = startHour; hour <= endHour; hour += 1) {
+        const button = document.createElement("button");
+        const suffix = hour >= 12 ? "PM" : "AM";
+        const displayHour = hour % 12 || 12;
+        const timeValue = `${String(hour).padStart(2, "0")}:00`;
+        button.type = "button";
+        button.className = "time-button";
+        button.innerHTML = `${displayHour}:00 ${suffix}<span class="zh">${suffix === "AM" ? "上午" : "下午"} ${displayHour}:00</span>`;
+        button.setAttribute("aria-pressed", "false");
+        if (!supabaseClient || availabilityError) {
+          button.disabled = true;
+        } else if (bookedSlots.has(timeValue)) {
+          button.disabled = true;
+          button.innerHTML = `${displayHour}:00 ${suffix}<span class="zh">Booked / 已预约</span>`;
+          button.setAttribute("aria-label", `${displayHour}:00 ${suffix}, booked / 已预约`);
+        }
+        button.addEventListener("click", () => {
+          selectedTime = timeValue;
+          timeGrid.querySelectorAll("button").forEach((item) => item.setAttribute("aria-pressed", String(item === button)));
+          formError.classList.remove("visible");
+        });
+        timeGrid.append(button);
+      }
+    }
+
+    document.querySelectorAll('input[name="location"]').forEach((radio) => {
+      radio.addEventListener("change", () => {
+        const isHome = radio.value === "home" && radio.checked;
+        const isSecond = radio.value === "second" && radio.checked;
+        if (!isHome && !isSecond) return;
+        homeAddressField.hidden = !isHome;
+        secondAddressField.hidden = !isSecond;
+        homeAddress.disabled = !isHome;
+        homeAddress.required = isHome;
+        secondAddress.disabled = !isSecond;
+        secondAddress.required = isSecond;
+        formError.classList.remove("visible");
+      });
+    });
+
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      confirmation.classList.remove("visible");
+      if (!form.reportValidity()) return;
+      if (!supabaseClient) {
+        formError.textContent = "Supabase is not connected. Add your project URL and anon key first. / Supabase 尚未连接，请先填写项目 URL 和 anon key。";
+        formError.classList.add("visible");
+        return;
+      }
+      if (!selectedDate || !selectedTime) {
+        formError.textContent = "Select an available appointment date and time. / 请选择可预约日期和时间。";
+        formError.classList.add("visible");
+        return;
+      }
+
+      const data = new FormData(form);
+      const location = data.get("location");
+      const address = location === "home" ? data.get("homeAddress") : data.get("secondAddress");
+      const dateText = `${monthNames[selectedDate.getMonth()]} ${selectedDate.getDate()}, ${selectedDate.getFullYear()} (${weekdayNames[selectedDate.getDay()]})`;
+      const timeHour = Number(selectedTime.slice(0, 2));
+      const timeText = `${timeHour % 12 || 12}:00 ${timeHour >= 12 ? "PM" : "AM"} / ${timeHour >= 12 ? "下午" : "上午"} ${timeHour % 12 || 12}:00`;
+      const vehicleText = `${data.get("year")} ${data.get("make")} ${data.get("model")} ${data.get("trim")}`;
+
+      const { error } = await supabaseClient.rpc("create_appointment", {
+        p_appointment_date: formatDate(selectedDate),
+        p_appointment_time: selectedTime,
+        p_vehicle_year: Number(data.get("year")),
+        p_vehicle_make: data.get("make"),
+        p_vehicle_model: data.get("model"),
+        p_vehicle_trim: data.get("trim"),
+        p_location_type: location,
+        p_service_address: address,
+        p_customer_name: data.get("customerName"),
+        p_customer_email: data.get("customerEmail"),
+        p_customer_phone: data.get("customerPhone")
+      });
+
+      if (error) {
+        if (error.code === "23505" || error.message.includes("appointments_one_booking_per_slot")) {
+          formError.textContent = "This slot was just booked. Choose another time. / 这个时段刚刚被预约，请选择其他时间。";
+        } else {
+          formError.textContent = "Booking could not be saved. Please try again. / 预约保存失败，请重试。";
+        }
+        formError.classList.add("visible");
+        await renderTimes(selectedDate);
+        return;
+      }
+
+      confirmation.innerHTML = "";
+      const heading = document.createElement("h2");
+      heading.textContent = "Booking confirmed / 预约已确认";
+      const details = [
+        `Vehicle / 车辆: ${vehicleText}`,
+        `Address / 地点: ${location === "home" ? "Home / 家庭地址" : "Second address / 第二地点"} · ${address}`,
+        `Appointment / 时间: ${dateText} · ${timeText}`,
+        `Contact / 联系人: ${data.get("customerName")} · ${data.get("customerPhone")} · ${data.get("customerEmail")}`
+      ];
+      confirmation.append(heading);
+      details.forEach((text) => {
+        const line = document.createElement("p");
+        line.textContent = text;
+        confirmation.append(line);
+      });
+      const note = document.createElement("p");
+      note.className = "demo-note";
+      note.textContent = "Saved to the booking database. Email notifications are not configured yet. / 预约已保存到数据库；邮件通知尚未配置。";
+      confirmation.append(note);
+      confirmation.classList.add("visible");
+      confirmation.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      formError.classList.remove("visible");
+      await renderTimes(selectedDate);
+    });
+
+    addYearOptions();
+    renderDates();
+  </script>
+</body>
+</html>
