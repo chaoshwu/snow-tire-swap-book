@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#f6f5ef">
-  <title>Tire Booking | Northline Tire</title>
+  <title>Tire Booking</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -182,7 +182,6 @@
 </head>
 <body>
   <header class="topbar">
-    <div class="brand"><span class="brand-mark" aria-hidden="true">N</span><span>NORTHLINE TIRE</span></div>
     <div class="topbar-note">Seasonal tire change · Mobile service <span class="zh zh-copy">季节换胎 · 上门预约</span></div>
   </header>
 
@@ -288,7 +287,6 @@
           <div class="time-grid" id="time-grid" role="group" aria-label="Available times / 可预约时间"></div>
           <p class="section-note">Wed–Fri 5:00–7:00 PM · Sat–Sun 8:00 AM–7:00 PM<br>周三至周五 5:00–7:00 PM · 周六、周日 8:00 AM–7:00 PM</p>
           <p class="section-note">Appointments through Dec 31 / 预约开放至12月31日</p>
-          <p class="section-note" id="database-status" role="status">Booking system is not connected yet. / 预约系统尚未连接。</p>
         </section>
 
         <p class="form-error" id="form-error" role="alert"></p>
@@ -301,7 +299,7 @@
 
       <aside class="side-panel" aria-label="Appointment hours / 预约时段信息">
         <div class="side-image">
-          <img src="https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?auto=format&fit=crop&w=900&q=85" alt="汽车维修工位与车辆 / Vehicle in an auto repair shop" loading="eager">
+          <img src="https://images.unsplash.com/photo-1585252522525-4f9ad48a24ea?auto=format&fit=crop&w=900&q=85" alt="Close-up of a car tire tread / 轮胎胎纹特写" loading="eager">
           <span class="image-label">WINTER READY</span>
         </div>
         <div class="side-content">
@@ -319,7 +317,7 @@
     </div>
   </main>
 
-  <footer>Northline Tire · Seasonal tire booking / 季节换胎预约</footer>
+  <footer>Seasonal tire booking / 季节换胎预约</footer>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="supabase-config.js"></script>
@@ -333,7 +331,6 @@
     const nextMonthButton = document.querySelector("#next-month");
     const confirmation = document.querySelector("#confirmation");
     const formError = document.querySelector("#form-error");
-    const databaseStatus = document.querySelector("#database-status");
     const homeAddress = document.querySelector("#home-address");
     const secondAddress = document.querySelector("#second-address");
     const homeAddressField = document.querySelector("#home-address-field");
@@ -355,12 +352,6 @@
 
     const weekdayNames = ["Sun / 周日", "Mon / 周一", "Tue / 周二", "Wed / 周三", "Thu / 周四", "Fri / 周五", "Sat / 周六"];
     const monthNames = ["Jan / 1月", "Feb / 2月", "Mar / 3月", "Apr / 4月", "May / 5月", "Jun / 6月", "Jul / 7月", "Aug / 8月", "Sep / 9月", "Oct / 10月", "Nov / 11月", "Dec / 12月"];
-
-    if (supabaseClient) {
-      databaseStatus.textContent = "Checking appointment availability… / 正在查询可预约时段…";
-    } else {
-      databaseStatus.textContent = "Add your Supabase project URL and anon key to supabase-config.js to enable bookings. / 请在 supabase-config.js 中填写 Supabase URL 和 anon key。";
-    }
 
     function addYearOptions() {
       const yearSelect = document.querySelector("#vehicle-year");
@@ -462,10 +453,8 @@
         if (selectedDate && formatDate(selectedDate) !== dateKey) return;
         if (error) {
           availabilityError = error;
-          databaseStatus.textContent = "Could not load availability. Please try again. / 无法加载时段，请重试。";
         } else {
           bookedSlots = new Set(data.map((slot) => String(slot.appointment_time).slice(0, 5)));
-          databaseStatus.textContent = "Live availability from Supabase. / 时段已连接 Supabase 实时查询。";
         }
       }
 
