@@ -298,7 +298,6 @@
           <div class="date-grid" id="date-grid" role="group" aria-label="Available dates / 可预约日期"></div>
           <div class="availability-label"><span class="availability-dot" aria-hidden="true"></span><span id="selected-date-label">Available times / 可预约时段</span></div>
           <div class="time-grid" id="time-grid" role="group" aria-label="Available times / 可预约时间"></div>
-          <p class="section-note">Wed–Fri 5:00 PM–6:00 PM · Sat–Sun 8:00 AM–6:00 PM<br>周三至周五 5:00 PM–6:00 PM · 周六、周日 8:00 AM–6:00 PM</p>
           <p class="section-note">Appointments through Dec 31 / 预约开放至12月31日</p>
         </section>
 
@@ -669,10 +668,6 @@
         line.textContent = text;
         confirmation.append(line);
       });
-      const note = document.createElement("p");
-      note.className = "demo-note";
-      note.textContent = "Saved to the booking database. Email notifications are not configured yet. / 预约已保存到数据库；邮件通知尚未配置。";
-      confirmation.append(note);
       confirmation.classList.add("visible");
       confirmation.scrollIntoView({ behavior: "smooth", block: "nearest" });
       formError.classList.remove("visible");
