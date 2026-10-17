@@ -356,13 +356,24 @@
     const vehicleModelOtherField = document.querySelector("#vehicle-model-other-field");
     const vehicleModelOther = document.querySelector("#vehicle-model-other");
     const supabaseConfig = window.SUPABASE_CONFIG || {};
+    const serviceTimeZone = "America/Toronto";
     const supabaseClient = window.supabase && supabaseConfig.url && supabaseConfig.anonKey
       ? window.supabase.createClient(supabaseConfig.url, supabaseConfig.anonKey)
       : null;
     let selectedDate = null;
     let selectedTime = null;
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    function getServiceToday() {
+      const parts = new Intl.DateTimeFormat("en-CA", {
+        timeZone: serviceTimeZone,
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit"
+      }).formatToParts(new Date());
+      const values = Object.fromEntries(parts.filter(({ type }) => type !== "literal").map(({ type, value }) => [type, value]));
+      return new Date(Number(values.year), Number(values.month) - 1, Number(values.day));
+    }
+
+    const today = getServiceToday();
     const firstBookableDate = new Date(today);
     firstBookableDate.setDate(firstBookableDate.getDate() + 1);
     const lastBookableDate = new Date(today.getFullYear(), 11, 31);
@@ -409,7 +420,7 @@
 
     function addYearOptions() {
       const yearSelect = document.querySelector("#vehicle-year");
-      const currentYear = new Date().getFullYear();
+      const currentYear = today.getFullYear();
       for (let year = currentYear; year >= 2008; year -= 1) {
         const option = document.createElement("option");
         option.value = String(year);

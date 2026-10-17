@@ -58,14 +58,19 @@ as $$
 declare
   new_appointment_id uuid;
   appointment_weekday integer;
+  local_today date;
 begin
+  -- Supabase runs in UTC by default, while the booking calendar is local to Toronto.
+  -- Use the service area's date so late-evening bookings for tomorrow are accepted.
+  local_today := (now() at time zone 'America/Toronto')::date;
+
   if p_appointment_date is null or p_appointment_time is null then
     raise exception 'Choose an appointment date and time.' using errcode = '22023';
   end if;
 
   appointment_weekday := extract(isodow from p_appointment_date)::integer;
-  if p_appointment_date <= current_date
-    or p_appointment_date > make_date(extract(year from current_date)::integer, 12, 31)
+  if p_appointment_date <= local_today
+    or p_appointment_date > make_date(extract(year from local_today)::integer, 12, 31)
     or not (
       (appointment_weekday between 3 and 5 and p_appointment_time >= time '17:00' and p_appointment_time < time '19:00')
       or (appointment_weekday in (6, 7) and p_appointment_time >= time '08:00' and p_appointment_time < time '19:00')

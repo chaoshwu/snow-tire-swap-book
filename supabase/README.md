@@ -24,6 +24,8 @@ window.SUPABASE_CONFIG = {
 
 The anon/publishable key is designed for browser use. Never put the `service_role` key, database password, or email-provider secret in this file or any frontend code.
 
+The booking function uses `America/Toronto` for the date boundary, so it stays aligned with the calendar shown to customers even when Supabase's default UTC date has already advanced.
+
 ## 4. Test
 
 Serve the workspace over `http://localhost` (not `file://`), then test booking the same date and time twice. The first request should be saved; the second should be rejected by the database unique constraint. Check the `appointments` table in the Supabase dashboard to review submitted details.
