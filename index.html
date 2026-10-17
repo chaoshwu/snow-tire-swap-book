@@ -115,6 +115,9 @@
     .time-button[aria-pressed="true"] .zh { color: rgba(255, 255, 255, .8); }
     .time-button:disabled { border-color: #e4e4df; background: #f0f0ec; color: #85877f; cursor: not-allowed; text-decoration: line-through; }
     .section-note { margin: 9px 0 0; color: var(--muted); font-size: 11px; line-height: 1.5; }
+    .cancellation-note { margin: 17px 0 0; padding: 12px 14px; border-left: 3px solid var(--orange); background: #fff5ef; color: #5f453b; font-size: 12px; line-height: 1.6; }
+    .cancellation-note a { color: var(--green-dark); font-weight: 700; text-decoration: none; white-space: nowrap; }
+    .cancellation-note a:hover { text-decoration: underline; }
     .submit-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-top: 23px; }
     .submit-note { max-width: 265px; margin: 0; color: var(--muted); font-size: 11px; line-height: 1.55; }
     .submit-button { display: inline-flex; min-height: 46px; align-items: center; justify-content: center; gap: 15px; padding: 0 19px; border: 0; border-radius: 4px; background: var(--green-dark); color: white; font-size: 13px; font-weight: 700; }
@@ -301,6 +304,7 @@
 
         <p class="form-error" id="form-error" role="alert"></p>
         <div class="confirmation" id="confirmation" role="status" aria-live="polite"></div>
+        <p class="cancellation-note">Need to cancel your appointment? Please call or text <a href="tel:+16136149806">613-614-9806</a>.<br><span class="zh">如需取消预约，请致电或短信 <a href="tel:+16136149806">613-614-9806</a>。</span></p>
         <div class="submit-row">
           <p class="submit-note">Your contact details and address are only used to arrange this appointment.<br>联系方式和地址仅用于安排本次预约。</p>
           <button class="submit-button" type="submit">Book appointment / 确认预约 <span aria-hidden="true">→</span></button>
