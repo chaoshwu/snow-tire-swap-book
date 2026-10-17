@@ -13,16 +13,6 @@ type AppointmentRecord = {
   customer_phone: string;
 };
 
-type TorqueSpec = {
-  torque_lb_ft?: number;
-  torque_nm?: number;
-  torque_display?: string;
-  source_name: string;
-  source_url: string;
-  verified_at: string;
-  notes: string | null;
-};
-
 type DatabaseWebhookPayload = {
   type: string;
   schema: string;
@@ -35,56 +25,6 @@ function jsonResponse(message: string, status: number): Response {
     status,
     headers: { "Content-Type": "application/json" },
   });
-}
-
-async function findTorqueSpec(appointment: AppointmentRecord): Promise<TorqueSpec | null> {
-  const supabaseUrl = Deno.env.get("SUPABASE_URL");
-  const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-  if (!supabaseUrl || !serviceRoleKey) {
-    console.error("Torque lookup is not configured.");
-    return null;
-  }
-
-  const baseUrl = `${supabaseUrl}/rest/v1/vehicle_torque_specs`;
-  const headers = {
-    "apikey": serviceRoleKey,
-    "Authorization": `Bearer ${serviceRoleKey}`,
-  };
-
-  async function query(trim: string | null): Promise<TorqueSpec | null> {
-    const params = new URLSearchParams({
-      select: "torque_lb_ft,torque_nm,source_name,source_url,verified_at,notes",
-      vehicle_year: `eq.${appointment.vehicle_year}`,
-      vehicle_make: `eq.${appointment.vehicle_make}`,
-      vehicle_model: `eq.${appointment.vehicle_model}`,
-      limit: "1",
-    });
-    params.set("vehicle_trim", trim === null ? "is.null" : `eq.${trim}`);
-    const response = await fetch(`${baseUrl}?${params.toString()}`, { headers });
-    if (!response.ok) {
-      console.error("Torque lookup failed with status", response.status);
-      return null;
-    }
-    const rows = await response.json() as TorqueSpec[];
-    return rows[0] || null;
-  }
-
-  const exactSpec = await query(appointment.vehicle_trim) || await query(null);
-  if (exactSpec) return exactSpec;
-
-  const defaultParams = new URLSearchParams({
-    select: "torque_display,source_name,source_url,verified_at,notes",
-    vehicle_make: `eq.${appointment.vehicle_make}`,
-    vehicle_model: `eq.${appointment.vehicle_model}`,
-    limit: "1",
-  });
-  const defaultResponse = await fetch(`${supabaseUrl}/rest/v1/vehicle_torque_defaults?${defaultParams.toString()}`, { headers });
-  if (!defaultResponse.ok) {
-    console.error("Default torque lookup failed with status", defaultResponse.status);
-    return null;
-  }
-  const defaultRows = await defaultResponse.json() as TorqueSpec[];
-  return defaultRows[0] || null;
 }
 
 Deno.serve(async (request: Request) => {
@@ -119,7 +59,6 @@ Deno.serve(async (request: Request) => {
   }
 
   const time = appointment.appointment_time.slice(0, 5);
-  const torqueSpec = await findTorqueSpec(appointment);
   const vehicle = [
     appointment.vehicle_year,
     appointment.vehicle_make,
@@ -132,17 +71,6 @@ Deno.serve(async (request: Request) => {
     `Date: ${appointment.appointment_date}`,
     `Time: ${time}`,
     `Vehicle: ${vehicle}`,
-    torqueSpec
-      ? `Wheel lug torque: ${torqueSpec.torque_display || `${torqueSpec.torque_lb_ft} lb-ft (${torqueSpec.torque_nm} Nm)`}`
-      : "Wheel lug torque: Not confirmed from the OEM data table",
-    ...(torqueSpec
-      ? [
-          `Torque source: ${torqueSpec.source_name}`,
-          `Torque source URL: ${torqueSpec.source_url}`,
-          `Torque verified: ${torqueSpec.verified_at}`,
-          ...(torqueSpec.notes ? [`Torque notes: ${torqueSpec.notes}`] : []),
-        ]
-      : ["Action: Verify the vehicle owner's manual before tightening wheel nuts or bolts."]),
     `Service location: ${appointment.location_type}`,
     `Address: ${appointment.service_address}`,
     `Customer: ${appointment.customer_name}`,

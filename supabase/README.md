@@ -32,7 +32,7 @@ Serve the workspace over `http://localhost` (not `file://`), then test booking t
 
 ## Email notifications
 
-The Edge Function at `supabase/functions/booking-email/index.ts` sends a plain-text notification to the shop after a new appointment is inserted. It uses Resend; the API key and shop inbox stay in Supabase secrets, not in the website.
+The `smooth-api` Edge Function at `supabase/functions/smooth-api/index.ts` sends a plain-text notification to the shop after a new appointment is inserted. It uses Resend; the API key and shop inbox stay in Supabase secrets, not in the website.
 
 1. Create a Resend account and an API key. For regular delivery, verify a sending domain and choose a sender such as `Northline Tire <bookings@yourdomain.com>`.
 2. In Supabase **Edge Functions > Secrets**, add these secrets:
@@ -44,8 +44,8 @@ The Edge Function at `supabase/functions/booking-email/index.ts` sends a plain-t
 
 3. Deploy the function. The Dashboard route does not require a local CLI:
 
-  - In **Edge Functions**, choose **Deploy a new function > Via Editor** and name it `booking-email`.
-  - Paste the contents of `supabase/functions/booking-email/index.ts` into the editor.
+  - In **Edge Functions**, open the existing `smooth-api` function and use **Code > Deploy updates**.
+  - Paste the contents of `supabase/functions/smooth-api/index.ts` into the editor.
   - Turn off JWT verification for this function. It authenticates the database webhook with `x-webhook-secret` instead.
   - Click **Deploy function**.
 
@@ -54,12 +54,12 @@ The Edge Function at `supabase/functions/booking-email/index.ts` sends a plain-t
   ```sh
   supabase login
   supabase link --project-ref YOUR_PROJECT_REF
-  supabase functions deploy booking-email --no-verify-jwt
+  supabase functions deploy smooth-api --no-verify-jwt
   ```
 
   JWT verification is disabled because the database webhook authenticates with the shared `x-webhook-secret` header instead.
 
-4. In Supabase **Database > Webhooks**, create a webhook for `public.appointments`, event **INSERT**, method **POST**, URL `https://YOUR_PROJECT_REF.supabase.co/functions/v1/booking-email`. Add the header `x-webhook-secret` with the same random value saved as `BOOKING_WEBHOOK_SECRET`.
+4. In Supabase **Database > Webhooks**, create a webhook for `public.appointments`, event **INSERT**, method **POST**, URL `https://YOUR_PROJECT_REF.supabase.co/functions/v1/smooth-api`. Add the header `x-webhook-secret` with the same random value saved as `BOOKING_WEBHOOK_SECRET`.
 
 5. Make a test booking with dummy customer details, then check the shop inbox and **Edge Functions > Logs**. The email includes the vehicle, appointment time, service address, and customer contact details. The customer's email is optional and is only used as the reply-to address when supplied.
 
