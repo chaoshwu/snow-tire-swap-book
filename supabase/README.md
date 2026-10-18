@@ -12,6 +12,7 @@ In the Supabase dashboard, open **SQL Editor**, create a query, paste the conten
 - `create_appointment` validates the schedule and inserts the booking. A unique database constraint prevents two bookings for the same slot.
 - `archive_past_appointments` marks appointments whose scheduled time has passed with `archived_at`; it does not delete any data.
 - `archived_appointments` is a private view for historical analysis. Query it from the Supabase SQL Editor or another authenticated admin backend.
+- `create_appointment` limits successful bookings to 4 per phone number or source IP address in any rolling 24-hour window.
 
 ### Automatic archiving
 

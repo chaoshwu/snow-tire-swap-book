@@ -11,6 +11,8 @@ create table if not exists public.appointments (
   customer_name text not null,
   customer_email text,
   customer_phone text not null,
+  customer_phone_normalized text,
+  request_ip text,
   created_at timestamptz not null default now(),
   archived_at timestamptz,
   constraint appointments_one_booking_per_slot unique (appointment_date, appointment_time)
@@ -19,9 +21,13 @@ create table if not exists public.appointments (
 alter table public.appointments alter column vehicle_trim drop not null;
 alter table public.appointments alter column customer_email drop not null;
 alter table public.appointments add column if not exists archived_at timestamptz;
+alter table public.appointments add column if not exists customer_phone_normalized text;
+alter table public.appointments add column if not exists request_ip text;
 
 create index if not exists appointments_archived_date_idx
   on public.appointments (appointment_date, appointment_time, archived_at);
+create index if not exists appointments_rate_limit_idx
+  on public.appointments (created_at, customer_phone_normalized, request_ip);
 
 alter table public.appointments enable row level security;
 revoke all on table public.appointments from anon, authenticated;
@@ -97,11 +103,22 @@ declare
   appointment_weekday integer;
   local_today date;
   local_now timestamp without time zone;
+  request_headers jsonb;
+  request_ip_value text;
+  normalized_phone text;
+  recent_booking_count integer;
 begin
   -- Supabase runs in UTC by default, while the booking calendar is local to Toronto.
   -- Use the service area's date so late-evening bookings for tomorrow are accepted.
   local_today := (now() at time zone 'America/Toronto')::date;
   local_now := now() at time zone 'America/Toronto';
+  normalized_phone := regexp_replace(coalesce(p_customer_phone, ''), '[^0-9]', '', 'g');
+  request_headers := coalesce(nullif(current_setting('request.headers', true), ''), '{}')::jsonb;
+  request_ip_value := nullif(trim(split_part(
+    coalesce(nullif(request_headers ->> 'x-forwarded-for', ''), request_headers ->> 'x-real-ip', ''),
+    ',',
+    1
+  )), '');
 
   if p_appointment_date is null or p_appointment_time is null then
     raise exception 'Choose an appointment date and time.' using errcode = '22023';
@@ -130,6 +147,26 @@ begin
     raise exception 'Complete all required booking details.' using errcode = '22023';
   end if;
 
+  -- Serialize requests sharing either identifier so concurrent submissions cannot
+  -- bypass the limit at the same time.
+  perform pg_catalog.pg_advisory_xact_lock(hashtextextended('phone:' || normalized_phone, 0));
+  if request_ip_value is not null then
+    perform pg_catalog.pg_advisory_xact_lock(hashtextextended('ip:' || request_ip_value, 0));
+  end if;
+
+  select count(*) into recent_booking_count
+  from public.appointments as a
+  where a.created_at >= now() - interval '24 hours'
+    and (
+      a.customer_phone_normalized = normalized_phone
+      or (request_ip_value is not null and a.request_ip = request_ip_value)
+    );
+
+  if recent_booking_count >= 4 then
+    raise exception 'Booking limit reached: this phone number or IP address can make up to 4 successful bookings in 24 hours.'
+      using errcode = 'P0001';
+  end if;
+
   insert into public.appointments (
     appointment_date,
     appointment_time,
@@ -141,7 +178,9 @@ begin
     service_address,
     customer_name,
     customer_email,
-    customer_phone
+    customer_phone,
+    customer_phone_normalized,
+    request_ip
   ) values (
     p_appointment_date,
     p_appointment_time,
@@ -153,7 +192,9 @@ begin
     btrim(p_service_address),
     btrim(p_customer_name),
     nullif(btrim(coalesce(p_customer_email, '')), ''),
-    btrim(p_customer_phone)
+    btrim(p_customer_phone),
+    normalized_phone,
+    request_ip_value
   ) returning id into new_appointment_id;
 
   return new_appointment_id;

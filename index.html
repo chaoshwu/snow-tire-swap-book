@@ -690,6 +690,8 @@
       if (error) {
         if (error.code === "23505" || error.message.includes("appointments_one_booking_per_slot")) {
           formError.textContent = "This slot was just booked. Choose another time. / 这个时段刚刚被预约，请选择其他时间。";
+        } else if (error.message.includes("Booking limit reached")) {
+          formError.textContent = "Booking limit reached: up to 4 successful bookings per phone number or IP address every 24 hours. / 预约次数已达上限：同一手机号或 IP 地址每 24 小时最多成功预约 4 次。";
         } else {
           formError.textContent = "Booking could not be saved. Please try again. / 预约保存失败，请重试。";
         }
