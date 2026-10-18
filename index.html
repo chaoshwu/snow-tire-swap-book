@@ -388,9 +388,33 @@
     }
 
     const today = getServiceToday();
-    const firstBookableDate = new Date(today);
+    const serviceNow = getServiceNow();
+
+    function isBookableWeekday(date) {
+      return [0, 3, 4, 5, 6].includes(date.getDay());
+    }
+
+    function hasBookableTime(date, now) {
+      if (date > today) return isBookableWeekday(date);
+      if (date < today || !isBookableWeekday(date)) return false;
+
+      const minimumBookableTime = new Date(now.getTime() + 60 * 60 * 1000);
+      const startHour = date.getDay() === 0 || date.getDay() === 6 ? 8 : 17;
+      return Array.from({ length: 19 - startHour }, (_, index) => startHour + index)
+        .some((hour) => new Date(date.getFullYear(), date.getMonth(), date.getDate(), hour) >= minimumBookableTime);
+    }
+
+    function getFirstBookableDate() {
+      const date = new Date(today);
+      while (!hasBookableTime(date, serviceNow)) {
+        date.setDate(date.getDate() + 1);
+      }
+      return date;
+    }
+
+    const firstBookableDate = getFirstBookableDate();
     const lastBookableDate = new Date(today.getFullYear(), 11, 31);
-    const firstCalendarMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+    const firstCalendarMonth = new Date(firstBookableDate.getFullYear(), firstBookableDate.getMonth(), 1);
     const lastCalendarMonth = new Date(today.getFullYear(), 11, 1);
     let visibleMonth = new Date(firstCalendarMonth);
 
@@ -513,14 +537,14 @@
       for (let dayOfMonth = 1; dayOfMonth <= daysInMonth; dayOfMonth += 1) {
         const date = new Date(visibleMonth.getFullYear(), visibleMonth.getMonth(), dayOfMonth);
         const weekday = date.getDay();
-        const isBookableWeekday = [0, 3, 4, 5, 6].includes(weekday);
+        const isBookableDay = [0, 3, 4, 5, 6].includes(weekday);
         const isWithinBookingWindow = date >= firstBookableDate && date <= lastBookableDate;
         const button = document.createElement("button");
         button.type = "button";
         button.className = "date-button";
         button.dataset.date = formatDate(date);
         button.setAttribute("aria-pressed", String(Boolean(selectedDate && formatDate(selectedDate) === button.dataset.date)));
-        button.disabled = !isBookableWeekday || !isWithinBookingWindow;
+        button.disabled = !isBookableDay || !isWithinBookingWindow;
         button.innerHTML = `<span class="date">${dayOfMonth}</span>`;
         button.setAttribute("aria-label", `${new Intl.DateTimeFormat("en-US", { weekday: "long", month: "long", day: "numeric" }).format(date)} / ${weekdayNames[weekday]}${button.disabled ? ", unavailable" : ", available"}`);
         button.addEventListener("click", () => selectDate(date, button));
