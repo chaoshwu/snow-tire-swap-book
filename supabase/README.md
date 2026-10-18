@@ -6,10 +6,28 @@ Create a Supabase project at https://supabase.com/dashboard and choose the regio
 
 ## 2. Create the database objects
 
-In the Supabase dashboard, open **SQL Editor**, create a query, paste the contents of `supabase/schema.sql`, and run it. If the earlier schema is already installed, run this updated SQL again; it keeps existing appointments and makes trim and email optional. The database accepts future appointments through December 31 of the current year. This creates a private appointments table and two RPC functions:
+In the Supabase dashboard, open **SQL Editor**, create a query, paste the contents of `supabase/schema.sql`, and run it. If the earlier schema is already installed, run this updated SQL again; it keeps existing appointments and makes trim and email optional. The database accepts future appointments through December 31 of the current year. This creates a private appointments table, an archive marker, and RPC functions:
 
 - `get_booked_slots` returns only occupied dates and times. It does not expose customer details.
 - `create_appointment` validates the schedule and inserts the booking. A unique database constraint prevents two bookings for the same slot.
+- `archive_past_appointments` marks appointments whose scheduled time has passed with `archived_at`; it does not delete any data.
+- `archived_appointments` is a private view for historical analysis. Query it from the Supabase SQL Editor or another authenticated admin backend.
+
+### Automatic archiving
+
+The archive function is intentionally not callable by the public booking page. To run it automatically, enable the `pg_cron` extension in Supabase, then run this once in the SQL Editor:
+
+```sql
+select cron.schedule(
+  'archive-past-appointments',
+  '15 * * * *',
+  $$select public.archive_past_appointments();$$
+);
+```
+
+Run `select public.archive_past_appointments();` once after installing the updated schema to archive any history that already exists.
+
+This checks every hour at 15 minutes past the hour, using `America/Toronto` time. Historical rows remain available through `public.archived_appointments` for analysis.
 
 ## 3. Connect the page
 

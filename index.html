@@ -373,9 +373,22 @@
       return new Date(Number(values.year), Number(values.month) - 1, Number(values.day));
     }
 
+    function getServiceNow() {
+      const parts = new Intl.DateTimeFormat("en-CA", {
+        timeZone: serviceTimeZone,
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+        hourCycle: "h23"
+      }).formatToParts(new Date());
+      const values = Object.fromEntries(parts.filter(({ type }) => type !== "literal").map(({ type, value }) => [type, value]));
+      return new Date(Number(values.year), Number(values.month) - 1, Number(values.day), Number(values.hour), Number(values.minute));
+    }
+
     const today = getServiceToday();
     const firstBookableDate = new Date(today);
-    firstBookableDate.setDate(firstBookableDate.getDate() + 1);
     const lastBookableDate = new Date(today.getFullYear(), 11, 31);
     const firstCalendarMonth = new Date(today.getFullYear(), today.getMonth(), 1);
     const lastCalendarMonth = new Date(today.getFullYear(), 11, 1);
@@ -552,6 +565,10 @@
       timeGrid.replaceChildren();
       const day = date.getDay();
       const startHour = day === 0 || day === 6 ? 8 : 17;
+      const serviceNow = getServiceNow();
+      const minimumBookableTime = new Date(serviceNow.getTime() + 60 * 60 * 1000);
+      const isToday = formatDate(date) === formatDate(serviceNow);
+      let selectedTimeStillAvailable = false;
       let bookedSlots = new Set();
       let availabilityError = null;
 
@@ -575,6 +592,8 @@
         const suffix = hour >= 12 ? "PM" : "AM";
         const displayHour = hour % 12 || 12;
         const timeValue = `${String(hour).padStart(2, "0")}:00`;
+        const slotTime = new Date(date.getFullYear(), date.getMonth(), date.getDate(), hour);
+        const isPastLeadTime = isToday && slotTime < minimumBookableTime;
         button.type = "button";
         button.className = "time-button";
         button.innerHTML = `${displayHour}:00 ${suffix}<span class="zh">${suffix === "AM" ? "上午" : "下午"} ${displayHour}:00</span>`;
@@ -585,6 +604,14 @@
           button.disabled = true;
           button.innerHTML = `${displayHour}:00 ${suffix}<span class="zh">Booked / 已预约</span>`;
           button.setAttribute("aria-label", `${displayHour}:00 ${suffix}, booked / 已预约`);
+        } else if (isPastLeadTime) {
+          button.disabled = true;
+          button.innerHTML = `${displayHour}:00 ${suffix}<span class="zh">Unavailable / 不可预约</span>`;
+          button.setAttribute("aria-label", `${displayHour}:00 ${suffix}, unavailable / 不可预约`);
+        }
+        if (selectedTime === timeValue && !button.disabled) {
+          button.setAttribute("aria-pressed", "true");
+          selectedTimeStillAvailable = true;
         }
         button.addEventListener("click", () => {
           selectedTime = timeValue;
@@ -593,7 +620,14 @@
         });
         timeGrid.append(button);
       }
+      if (selectedTime && !selectedTimeStillAvailable) selectedTime = null;
     }
+
+    setInterval(() => {
+      if (selectedDate && formatDate(selectedDate) === formatDate(getServiceToday())) {
+        renderTimes(selectedDate);
+      }
+    }, 60 * 1000);
 
     document.querySelectorAll('input[name="location"]').forEach((radio) => {
       radio.addEventListener("change", () => {

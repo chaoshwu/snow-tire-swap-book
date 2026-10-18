@@ -12,11 +12,16 @@ create table if not exists public.appointments (
   customer_email text,
   customer_phone text not null,
   created_at timestamptz not null default now(),
+  archived_at timestamptz,
   constraint appointments_one_booking_per_slot unique (appointment_date, appointment_time)
 );
 
 alter table public.appointments alter column vehicle_trim drop not null;
 alter table public.appointments alter column customer_email drop not null;
+alter table public.appointments add column if not exists archived_at timestamptz;
+
+create index if not exists appointments_archived_date_idx
+  on public.appointments (appointment_date, appointment_time, archived_at);
 
 alter table public.appointments enable row level security;
 revoke all on table public.appointments from anon, authenticated;
@@ -31,11 +36,43 @@ as $$
   select a.appointment_date, a.appointment_time
   from public.appointments as a
   where a.appointment_date between p_start_date and p_end_date
+    and a.archived_at is null
   order by a.appointment_date, a.appointment_time;
 $$;
 
 revoke all on function public.get_booked_slots(date, date) from public;
 grant execute on function public.get_booked_slots(date, date) to anon, authenticated;
+
+create or replace function public.archive_past_appointments()
+returns integer
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  local_now timestamp without time zone;
+  archived_count integer;
+begin
+  local_now := now() at time zone 'America/Toronto';
+
+  update public.appointments
+  set archived_at = now()
+  where archived_at is null
+    and (appointment_date + appointment_time) < local_now;
+
+  get diagnostics archived_count = row_count;
+  return archived_count;
+end;
+$$;
+
+revoke all on function public.archive_past_appointments() from public;
+
+create or replace view public.archived_appointments as
+select *
+from public.appointments
+where archived_at is not null;
+
+revoke all on public.archived_appointments from public;
 
 create or replace function public.create_appointment(
   p_appointment_date date,
@@ -59,24 +96,27 @@ declare
   new_appointment_id uuid;
   appointment_weekday integer;
   local_today date;
+  local_now timestamp without time zone;
 begin
   -- Supabase runs in UTC by default, while the booking calendar is local to Toronto.
   -- Use the service area's date so late-evening bookings for tomorrow are accepted.
   local_today := (now() at time zone 'America/Toronto')::date;
+  local_now := now() at time zone 'America/Toronto';
 
   if p_appointment_date is null or p_appointment_time is null then
     raise exception 'Choose an appointment date and time.' using errcode = '22023';
   end if;
 
   appointment_weekday := extract(isodow from p_appointment_date)::integer;
-  if p_appointment_date <= local_today
+  if p_appointment_date < local_today
     or p_appointment_date > make_date(extract(year from local_today)::integer, 12, 31)
     or not (
       (appointment_weekday between 3 and 5 and p_appointment_time >= time '17:00' and p_appointment_time < time '19:00')
       or (appointment_weekday in (6, 7) and p_appointment_time >= time '08:00' and p_appointment_time < time '19:00')
     )
     or extract(minute from p_appointment_time) <> 0
-    or extract(second from p_appointment_time) <> 0 then
+    or extract(second from p_appointment_time) <> 0
+    or (p_appointment_date + p_appointment_time) < (local_now + interval '1 hour') then
     raise exception 'This appointment time is outside the available schedule.' using errcode = '22023';
   end if;
 
