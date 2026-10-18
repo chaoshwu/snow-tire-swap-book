@@ -20,14 +20,14 @@ The archive function is intentionally not callable by the public booking page. T
 ```sql
 select cron.schedule(
   'archive-past-appointments',
-  '15 * * * *',
+  '15 0 * * *',
   $$select public.archive_past_appointments();$$
 );
 ```
 
 Run `select public.archive_past_appointments();` once after installing the updated schema to archive any history that already exists.
 
-This checks every hour at 15 minutes past the hour, using `America/Toronto` time. Historical rows remain available through `public.archived_appointments` for analysis.
+This checks once per day at 00:15 in the database timezone. The function itself uses `America/Toronto` time when deciding which appointments are past. Historical rows remain available through `public.archived_appointments` for analysis.
 
 ## 3. Connect the page
 
