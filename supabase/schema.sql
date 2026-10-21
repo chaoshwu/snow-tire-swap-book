@@ -128,8 +128,8 @@ begin
   if p_appointment_date < local_today
     or p_appointment_date > make_date(extract(year from local_today)::integer, 12, 31)
     or not (
-      (appointment_weekday between 3 and 5 and p_appointment_time >= time '17:00' and p_appointment_time < time '19:00')
-      or (appointment_weekday in (6, 7) and p_appointment_time >= time '08:00' and p_appointment_time < time '19:00')
+      (appointment_weekday between 3 and 5 and p_appointment_time = time '17:00')
+      or (appointment_weekday in (6, 7) and p_appointment_time >= time '08:00' and p_appointment_time <= time '17:00')
     )
     or extract(minute from p_appointment_time) <> 0
     or extract(second from p_appointment_time) <> 0

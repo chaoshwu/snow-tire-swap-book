@@ -320,8 +320,8 @@
           <p class="side-subtitle">Choose a date and time that works for you<br>挑选适合你的日期与时段</p>
           <div class="hours-list">
             <div class="hours-row"><span>Mon–Tue<br>周一、周二</span><strong>Unavailable<br>暂停预约</strong></div>
-              <div class="hours-row"><span>Wed–Fri<br>周三至周五</span><strong>5:00 PM — 6:00 PM</strong></div>
-              <div class="hours-row"><span>Sat–Sun<br>周六、周日</span><strong>8:00 AM — 6:00 PM</strong></div>
+              <div class="hours-row"><span>Wed–Fri<br>周三至周五</span><strong>5:00 PM</strong></div>
+              <div class="hours-row"><span>Sat–Sun<br>周六、周日</span><strong>8:00 AM — 5:00 PM</strong></div>
               <div class="hours-row"><span>Seasonal tire swap<br>季节换胎</span><strong>$50</strong></div>
           </div>
           <div class="side-rule"></div>
@@ -610,7 +610,7 @@
         }
       }
 
-      const endHour = 18;
+      const endHour = 17;
       for (let hour = startHour; hour <= endHour; hour += 1) {
         const button = document.createElement("button");
         const suffix = hour >= 12 ? "PM" : "AM";
