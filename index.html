@@ -46,6 +46,9 @@
     .eyebrow { color: var(--green); font-size: 11px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase; }
     h1 { margin: 9px 0 0; font-size: clamp(28px, 4vw, 42px); line-height: 1.2; letter-spacing: 0; }
     .intro-copy { max-width: 320px; margin: 0 0 4px; color: var(--muted); font-size: 14px; line-height: 1.7; }
+    .price-callout { display: flex; width: min(250px, 100%); align-items: center; justify-content: space-between; gap: 16px; margin: 14px 0 0; padding: 9px 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); color: var(--green-dark); font-size: 13px; font-weight: 700; }
+    .price-callout strong { color: var(--green-dark); font-size: 18px; line-height: 1; }
+    .price-callout .zh { display: block; margin-top: 3px; color: var(--muted); font-size: 10px; font-weight: 500; }
     .booking-layout { display: grid; grid-template-columns: minmax(0, 1fr) 310px; align-items: start; gap: 20px; }
     form { min-width: 0; }
     .form-panel, .side-panel { border: 1px solid var(--line); border-radius: 7px; background: var(--surface); }
@@ -190,6 +193,10 @@
       <div>
         <div class="eyebrow">SEASONAL TIRE CHANGE · 季节换胎</div>
         <h1 id="page-title">Tire change, on your time.<span class="zh zh-copy">把换胎时间，安排妥当。</span></h1>
+        <div class="price-callout" aria-label="Seasonal tire swap price / 季节换胎价格">
+          <span>Seasonal tire swap<span class="zh">季节换胎</span></span>
+          <strong>$50</strong>
+        </div>
       </div>
       <p class="intro-copy bilingual-copy">Enter your vehicle and service address, then choose a time that works for you. Weekend appointments are available.<span class="zh zh-copy">填写车辆和服务地点，再挑一个方便的时间。周末时段也开放预约。</span></p>
     </section>
@@ -319,10 +326,10 @@
           <h2 class="side-title">Appointment hours<span class="zh">可预约时间</span></h2>
           <p class="side-subtitle">Choose a date and time that works for you<br>挑选适合你的日期与时段</p>
           <div class="hours-list">
-            <div class="hours-row"><span>Mon–Tue<br>周一、周二</span><strong>Unavailable<br>暂停预约</strong></div>
+              <div class="hours-row"><span>Mon–Tue<br>周一、周二</span><strong>Unavailable<br>暂停预约</strong></div>
               <div class="hours-row"><span>Wed–Fri<br>周三至周五</span><strong>5:00 PM</strong></div>
               <div class="hours-row"><span>Sat–Sun<br>周六、周日</span><strong>8:00 AM — 5:00 PM</strong></div>
-              <div class="hours-row"><span>Seasonal tire swap<br>季节换胎</span><strong>$50</strong></div>
+              <div class="hours-row"><span>Over 10 km from Kanata Lake<br>距 Kanata Lake 超过 10 公里</span><strong>+$10</strong></div>
           </div>
           <div class="side-rule"></div>
           <div class="service-note"><b aria-hidden="true">i</b><span>Please verify your vehicle details and address so the technician can prepare.<br>请核对车型款式和地址，确保技师能为你的车辆做好准备。</span></div>
