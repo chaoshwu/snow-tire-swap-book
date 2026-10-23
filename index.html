@@ -70,6 +70,13 @@
     .section-heading .en { display: block; margin-top: 2px; color: var(--muted); font-size: 10px; font-weight: 500; }
     .section-number { display: grid; place-items: center; width: 25px; height: 25px; border-radius: 50%; background: var(--soft-green); color: var(--green); font-size: 12px; }
     .field-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 15px 13px; }
+    .vehicle-list { display: grid; gap: 15px; }
+    .vehicle-card { padding: 14px; border: 1px solid var(--line); border-radius: 5px; background: #fff; }
+    .vehicle-card-title { margin: 0 0 12px; color: var(--green-dark); font-size: 12px; font-weight: 700; }
+    .vehicle-card-title .zh { margin-left: 5px; }
+    .secondary-vehicle { display: none; }
+    .secondary-vehicle.visible { display: block; }
+    .schedule-hint { margin: 10px 0 0; color: var(--muted); font-size: 11px; line-height: 1.5; }
     .field { display: flex; min-width: 0; flex-direction: column; gap: 7px; }
     .field[hidden] { display: none !important; }
     .field.full { grid-column: 1 / -1; }
@@ -219,6 +226,16 @@
       <form id="booking-form" class="form-panel">
         <section aria-labelledby="vehicle-heading">
           <h2 class="section-heading" id="vehicle-heading"><span class="section-number">01</span><span>Vehicle<span class="zh">车辆信息</span></span></h2>
+          <div class="field" style="margin-bottom: 15px; max-width: 230px;">
+            <label for="vehicle-count">Number of vehicles <span class="zh">车辆数量</span></label>
+            <select id="vehicle-count" name="vehicleCount">
+              <option value="1">1 vehicle / 1 辆车</option>
+              <option value="2">2 vehicles / 2 辆车</option>
+            </select>
+          </div>
+          <div class="vehicle-list" id="vehicle-list">
+          <div class="vehicle-card" id="vehicle-card-1">
+            <p class="vehicle-card-title">Vehicle 1 <span class="zh">车辆 1</span></p>
           <div class="field-grid">
             <div class="field">
               <label for="vehicle-year">Year <span class="zh">年份</span></label>
@@ -258,6 +275,13 @@
               <input id="vehicle-trim" name="trim" placeholder="e.g. XLE AWD / 例如 XLE AWD" autocomplete="off">
             </div>
           </div>
+          </div>
+          <div class="vehicle-card secondary-vehicle" id="vehicle-card-2" aria-hidden="true">
+            <p class="vehicle-card-title">Vehicle 2 <span class="zh">车辆 2</span></p>
+            <div class="field-grid"></div>
+          </div>
+          </div>
+          <p class="schedule-hint" id="vehicle-schedule-hint">One weekday 5:00 PM appointment can include two vehicles at the same address. / 工作日 5 点同一地址可预约两辆车。</p>
         </section>
 
         <div class="divider"></div>
@@ -361,6 +385,9 @@
     const vehicleModelSelect = document.querySelector("#vehicle-model");
     const vehicleModelOtherField = document.querySelector("#vehicle-model-other-field");
     const vehicleModelOther = document.querySelector("#vehicle-model-other");
+    const vehicleCard2 = document.querySelector("#vehicle-card-2");
+    const vehicleCountSelect = document.querySelector("#vehicle-count");
+    const vehicleScheduleHint = document.querySelector("#vehicle-schedule-hint");
     const supabaseConfig = window.SUPABASE_CONFIG || {};
     const serviceTimeZone = "America/Toronto";
     const supabaseClient = window.supabase && supabaseConfig.url && supabaseConfig.anonKey
@@ -368,6 +395,7 @@
       : null;
     let selectedDate = null;
     let selectedTime = null;
+    let vehicleCount = 1;
     function getServiceToday() {
       const parts = new Intl.DateTimeFormat("en-CA", {
         timeZone: serviceTimeZone,
@@ -462,14 +490,15 @@
     };
 
     function addYearOptions() {
-      const yearSelect = document.querySelector("#vehicle-year");
       const currentYear = today.getFullYear();
-      for (let year = currentYear; year >= 2008; year -= 1) {
-        const option = document.createElement("option");
-        option.value = String(year);
-        option.textContent = String(year);
-        yearSelect.append(option);
-      }
+      document.querySelectorAll("select[name^='year']").forEach((yearSelect) => {
+        for (let year = currentYear; year >= 2008; year -= 1) {
+          const option = document.createElement("option");
+          option.value = String(year);
+          option.textContent = String(year);
+          yearSelect.append(option);
+        }
+      });
     }
 
     function updateModelOptions() {
@@ -513,6 +542,75 @@
       vehicleModelOther.required = customModel;
       if (!customModel && vehicleMakeSelect.value !== "__other__") vehicleModelOther.value = "";
     }
+
+    function configureSecondVehicle() {
+      const fieldGrid = document.querySelector("#vehicle-card-1 .field-grid").cloneNode(true);
+      fieldGrid.querySelectorAll("[id]").forEach((element) => { element.id = element.id.replace("vehicle-", "vehicle-2-"); });
+      fieldGrid.querySelectorAll("[for]").forEach((element) => { element.htmlFor = element.htmlFor.replace("vehicle-", "vehicle-2-"); });
+      fieldGrid.querySelectorAll("[name]").forEach((element) => {
+        const names = { year: "year2", makeChoice: "makeChoice2", makeOther: "makeOther2", modelChoice: "modelChoice2", modelOther: "modelOther2", trim: "trim2" };
+        element.name = names[element.name] || element.name;
+        if (element.tagName === "INPUT" || element.tagName === "SELECT") element.value = "";
+      });
+      vehicleCard2.querySelector(".field-grid").replaceWith(fieldGrid);
+      const make = fieldGrid.querySelector("[name='makeChoice2']");
+      const model = fieldGrid.querySelector("[name='modelChoice2']");
+      make.addEventListener("change", () => updateVehicleModelOptions(make, model, fieldGrid));
+      model.addEventListener("change", () => updateVehicleCustomModelField(model, fieldGrid));
+    }
+
+    function updateVehicleModelOptions(makeSelect, modelSelect, scope) {
+      const makeOtherField = scope.querySelector("[id$='make-other-field']");
+      const makeOther = scope.querySelector("[id$='make-other']");
+      const modelOtherField = scope.querySelector("[id$='model-other-field']");
+      const modelOther = scope.querySelector("[id$='model-other']");
+      const customMake = makeSelect.value === "__other__";
+      makeOtherField.hidden = !customMake;
+      makeOther.disabled = !customMake;
+      makeOther.required = customMake;
+      if (!customMake) makeOther.value = "";
+      modelSelect.replaceChildren(new Option("Select model / 选择车型", ""));
+      modelOtherField.hidden = true;
+      modelOther.disabled = true;
+      modelOther.required = false;
+      modelOther.value = "";
+      if (!makeSelect.value) { modelSelect.disabled = true; modelSelect.required = false; return; }
+      if (customMake) modelSelect.add(new Option("Other / not listed / 未找到", "__other__"));
+      else (vehicleModels[makeSelect.value] || []).forEach((item) => modelSelect.add(new Option(item, item)));
+      if (!customMake) modelSelect.add(new Option("Other / not listed / 未找到", "__other__"));
+      modelSelect.disabled = false;
+      modelSelect.required = true;
+    }
+
+    function updateVehicleCustomModelField(modelSelect, scope) {
+      const customModel = modelSelect.value === "__other__";
+      const modelOtherField = scope.querySelector("[id$='model-other-field']");
+      const modelOther = scope.querySelector("[id$='model-other']");
+      modelOtherField.hidden = !customModel;
+      modelOther.disabled = !customModel;
+      modelOther.required = customModel;
+      if (!customModel) modelOther.value = "";
+    }
+
+    configureSecondVehicle();
+    vehicleCountSelect.addEventListener("change", () => {
+      const showingSecondVehicle = vehicleCountSelect.value === "2";
+      vehicleCount = showingSecondVehicle ? 2 : 1;
+      vehicleCard2.classList.toggle("visible", showingSecondVehicle);
+      vehicleCard2.setAttribute("aria-hidden", String(!showingSecondVehicle));
+      vehicleCard2.querySelectorAll("input, select").forEach((field) => { field.disabled = !showingSecondVehicle; });
+      vehicleScheduleHint.textContent = showingSecondVehicle
+        ? "Weekend bookings use two consecutive time slots; weekday 5:00 PM uses one slot for both vehicles. / 周末需要连续两个时段；工作日 5 点两辆车共用一个时段。"
+        : "One weekday 5:00 PM appointment can include two vehicles at the same address. / 工作日 5 点同一地址可预约两辆车。";
+      if (selectedDate) renderTimes(selectedDate);
+    });
+    vehicleCard2.querySelectorAll("input, select").forEach((field) => { field.disabled = true; });
+    /* Keep the second vehicle hidden until the customer explicitly selects 2. */
+    vehicleCountSelect.value = "1";
+    vehicleCount = 1;
+    vehicleCard2.classList.remove("visible");
+    vehicleCard2.setAttribute("aria-hidden", "true");
+    vehicleCard2.querySelectorAll("input, select").forEach((field) => { field.disabled = true; });
 
     vehicleMakeSelect.addEventListener("change", updateModelOptions);
     vehicleModelSelect.addEventListener("change", updateCustomModelField);
@@ -624,6 +722,10 @@
         const timeValue = `${String(hour).padStart(2, "0")}:00`;
         const slotTime = new Date(date.getFullYear(), date.getMonth(), date.getDate(), hour);
         const isPastLeadTime = isToday && slotTime < minimumBookableTime;
+        const isWeekend = day === 0 || day === 6;
+        const nextTimeValue = `${String(hour + 1).padStart(2, "0")}:00`;
+        const needsNextSlot = vehicleCount === 2 && isWeekend;
+        const nextSlotUnavailable = needsNextSlot && (hour === endHour || bookedSlots.has(nextTimeValue));
         button.type = "button";
         button.className = "time-button";
         button.innerHTML = `${displayHour}:00 ${suffix}<span class="zh">${suffix === "AM" ? "上午" : "下午"} ${displayHour}:00</span>`;
@@ -638,6 +740,10 @@
           button.disabled = true;
           button.innerHTML = `${displayHour}:00 ${suffix}<span class="zh">Unavailable / 不可预约</span>`;
           button.setAttribute("aria-label", `${displayHour}:00 ${suffix}, unavailable / 不可预约`);
+        } else if (nextSlotUnavailable) {
+          button.disabled = true;
+          button.innerHTML = `${displayHour}:00 ${suffix}<span class="zh">Needs next slot / 需连续时段</span>`;
+          button.setAttribute("aria-label", `${displayHour}:00 ${suffix}, needs the next consecutive slot / 需要下一个连续时段`);
         }
         if (selectedTime === timeValue && !button.disabled) {
           button.setAttribute("aria-pressed", "true");
@@ -677,24 +783,38 @@
       const data = new FormData(form);
       const location = data.get("location");
       const address = data.get("homeAddress");
-      const makeChoice = data.get("makeChoice");
-      const modelChoice = data.get("modelChoice");
-      const vehicleMake = makeChoice === "__other__" ? data.get("makeOther").trim() : makeChoice;
-      const vehicleModel = makeChoice === "__other__" || modelChoice === "__other__"
-        ? data.get("modelOther").trim()
-        : modelChoice;
+      function readVehicle(suffix = "") {
+        const makeChoice = data.get(`makeChoice${suffix}`);
+        const modelChoice = data.get(`modelChoice${suffix}`);
+        const vehicleMake = makeChoice === "__other__" ? data.get(`makeOther${suffix}`).trim() : makeChoice;
+        const vehicleModel = makeChoice === "__other__" || modelChoice === "__other__"
+          ? data.get(`modelOther${suffix}`).trim()
+          : modelChoice;
+        return { year: Number(data.get(`year${suffix}`)), make: vehicleMake, model: vehicleModel, trim: data.get(`trim${suffix}`) };
+      }
+      const vehicle1 = readVehicle();
+      const vehicle2 = vehicleCount === 2 ? readVehicle("2") : null;
+      const isWeekend = selectedDate.getDay() === 0 || selectedDate.getDay() === 6;
+      const secondTime = vehicleCount === 2 && isWeekend
+        ? `${String(Number(selectedTime.slice(0, 2)) + 1).padStart(2, "0")}:00`
+        : selectedTime;
       const dateText = `${monthNames[selectedDate.getMonth()]} ${selectedDate.getDate()}, ${selectedDate.getFullYear()} (${weekdayNames[selectedDate.getDay()]})`;
       const timeHour = Number(selectedTime.slice(0, 2));
       const timeText = `${timeHour % 12 || 12}:00 ${timeHour >= 12 ? "PM" : "AM"} / ${timeHour >= 12 ? "下午" : "上午"} ${timeHour % 12 || 12}:00`;
-      const vehicleText = [data.get("year"), vehicleMake, vehicleModel, data.get("trim")].filter(Boolean).join(" ");
+      const vehicleText = [vehicle1, vehicle2].filter(Boolean).map((vehicle) => [vehicle.year, vehicle.make, vehicle.model, vehicle.trim].filter(Boolean).join(" "));
 
-      const { error } = await supabaseClient.rpc("create_appointment", {
+      const { error } = await supabaseClient.rpc("create_appointment_v2", {
         p_appointment_date: formatDate(selectedDate),
         p_appointment_time: selectedTime,
-        p_vehicle_year: Number(data.get("year")),
-        p_vehicle_make: vehicleMake,
-        p_vehicle_model: vehicleModel,
-        p_vehicle_trim: data.get("trim"),
+        p_vehicle_year: vehicle1.year,
+        p_vehicle_make: vehicle1.make,
+        p_vehicle_model: vehicle1.model,
+        p_vehicle_trim: vehicle1.trim,
+        p_vehicle_2_year: vehicle2?.year || null,
+        p_vehicle_2_make: vehicle2?.make || null,
+        p_vehicle_2_model: vehicle2?.model || null,
+        p_vehicle_2_trim: vehicle2?.trim || null,
+        p_vehicle_2_time: secondTime,
         p_location_type: location,
         p_service_address: address,
         p_customer_name: data.get("customerName"),
@@ -703,7 +823,7 @@
       });
 
       if (error) {
-        if (error.code === "23505" || error.message.includes("appointments_one_booking_per_slot")) {
+        if (error.code === "23505" || error.message.includes("appointments_one_booking_per_slot") || error.message.includes("booking_slots_one_slot")) {
           formError.textContent = "This slot was just booked. Choose another time. / 这个时段刚刚被预约，请选择其他时间。";
         } else if (error.message.includes("Booking limit reached")) {
           formError.textContent = "Booking limit reached: up to 4 successful bookings per phone number or IP address every 24 hours. / 预约次数已达上限：同一手机号或 IP 地址每 24 小时最多成功预约 4 次。";
@@ -719,7 +839,7 @@
       const heading = document.createElement("h2");
       heading.textContent = "Booking confirmed / 预约已确认";
       const details = [
-        `Vehicle / 车辆: ${vehicleText}`,
+        ...vehicleText.map((text, index) => `Vehicle ${index + 1} / 车辆 ${index + 1}: ${text}`),
         `Address / 地点: Home / 家庭地址 · ${address}`,
         `Appointment / 时间: ${dateText} · ${timeText}`,
         `Contact / 联系人: ${data.get("customerName")} · ${data.get("customerPhone")} · ${data.get("customerEmail")}`

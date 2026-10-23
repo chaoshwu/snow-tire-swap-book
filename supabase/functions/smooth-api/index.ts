@@ -6,6 +6,10 @@ type AppointmentRecord = {
   vehicle_make: string;
   vehicle_model: string;
   vehicle_trim: string | null;
+  vehicle_2_year: number | null;
+  vehicle_2_make: string | null;
+  vehicle_2_model: string | null;
+  vehicle_2_trim: string | null;
   location_type: string;
   service_address: string;
   customer_name: string;
@@ -65,12 +69,19 @@ Deno.serve(async (request: Request) => {
     appointment.vehicle_model,
     appointment.vehicle_trim,
   ].filter(Boolean).join(" ");
+  const secondVehicle = [
+    appointment.vehicle_2_year,
+    appointment.vehicle_2_make,
+    appointment.vehicle_2_model,
+    appointment.vehicle_2_trim,
+  ].filter(Boolean).join(" ");
   const emailLines = [
     "A new tire-change appointment was booked.",
     "",
     `Date: ${appointment.appointment_date}`,
     `Time: ${time}`,
     `Vehicle: ${vehicle}`,
+    ...(secondVehicle ? [`Vehicle 2: ${secondVehicle}`] : []),
     `Service location: ${appointment.location_type}`,
     `Address: ${appointment.service_address}`,
     `Customer: ${appointment.customer_name}`,

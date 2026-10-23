@@ -6,6 +6,10 @@ create table if not exists public.appointments (
   vehicle_make text not null,
   vehicle_model text not null,
   vehicle_trim text,
+  vehicle_2_year integer,
+  vehicle_2_make text,
+  vehicle_2_model text,
+  vehicle_2_trim text,
   location_type text not null check (location_type in ('home', 'second')),
   service_address text not null,
   customer_name text not null,
@@ -16,6 +20,20 @@ create table if not exists public.appointments (
   created_at timestamptz not null default now(),
   archived_at timestamptz,
   constraint appointments_one_booking_per_slot unique (appointment_date, appointment_time)
+);
+
+alter table public.appointments add column if not exists vehicle_2_year integer;
+alter table public.appointments add column if not exists vehicle_2_make text;
+alter table public.appointments add column if not exists vehicle_2_model text;
+alter table public.appointments add column if not exists vehicle_2_trim text;
+
+create table if not exists public.booking_slots (
+  id uuid primary key default gen_random_uuid(),
+  appointment_id uuid not null references public.appointments(id) on delete cascade,
+  appointment_date date not null,
+  appointment_time time without time zone not null,
+  created_at timestamptz not null default now(),
+  constraint booking_slots_one_slot unique (appointment_date, appointment_time)
 );
 
 alter table public.appointments alter column vehicle_trim drop not null;
@@ -43,7 +61,13 @@ as $$
   from public.appointments as a
   where a.appointment_date between p_start_date and p_end_date
     and a.archived_at is null
-  order by a.appointment_date, a.appointment_time;
+  union
+  select s.appointment_date, s.appointment_time
+  from public.booking_slots as s
+  join public.appointments as a on a.id = s.appointment_id
+  where s.appointment_date between p_start_date and p_end_date
+    and a.archived_at is null
+  order by appointment_date, appointment_time;
 $$;
 
 revoke all on function public.get_booked_slots(date, date) from public;
@@ -203,3 +227,112 @@ $$;
 
 revoke all on function public.create_appointment(date, time without time zone, integer, text, text, text, text, text, text, text, text) from public;
 grant execute on function public.create_appointment(date, time without time zone, integer, text, text, text, text, text, text, text, text) to anon, authenticated;
+
+-- Supports two vehicles in one order. On weekdays both vehicles share the 5 PM
+-- slot; on weekends the second vehicle reserves the following consecutive slot.
+create or replace function public.create_appointment_v2(
+  p_appointment_date date,
+  p_appointment_time time without time zone,
+  p_vehicle_year integer,
+  p_vehicle_make text,
+  p_vehicle_model text,
+  p_vehicle_trim text,
+  p_vehicle_2_year integer,
+  p_vehicle_2_make text,
+  p_vehicle_2_model text,
+  p_vehicle_2_trim text,
+  p_vehicle_2_time time without time zone,
+  p_location_type text,
+  p_service_address text,
+  p_customer_name text,
+  p_customer_email text,
+  p_customer_phone text
+)
+returns uuid
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  new_appointment_id uuid;
+  appointment_weekday integer;
+  local_today date;
+  local_now timestamp without time zone;
+  request_headers jsonb;
+  request_ip_value text;
+  normalized_phone text;
+  recent_booking_count integer;
+  has_second_vehicle boolean;
+begin
+  local_today := (now() at time zone 'America/Toronto')::date;
+  local_now := now() at time zone 'America/Toronto';
+  appointment_weekday := extract(isodow from p_appointment_date)::integer;
+  has_second_vehicle := p_vehicle_2_year is not null;
+  normalized_phone := regexp_replace(coalesce(p_customer_phone, ''), '[^0-9]', '', 'g');
+  request_headers := coalesce(nullif(current_setting('request.headers', true), ''), '{}')::jsonb;
+  request_ip_value := nullif(trim(split_part(
+    coalesce(nullif(request_headers ->> 'x-forwarded-for', ''), request_headers ->> 'x-real-ip', ''), ',', 1)), '');
+
+  if p_appointment_date is null or p_appointment_time is null
+    or p_appointment_date < local_today
+    or p_appointment_date > make_date(extract(year from local_today)::integer, 12, 31)
+    or not ((appointment_weekday between 3 and 5 and p_appointment_time = time '17:00')
+      or (appointment_weekday in (6, 7) and p_appointment_time between time '08:00' and time '17:00'))
+    or extract(minute from p_appointment_time) <> 0
+    or extract(second from p_appointment_time) <> 0
+    or (p_appointment_date + p_appointment_time) < (local_now + interval '1 hour') then
+    raise exception 'This appointment time is outside the available schedule.' using errcode = '22023';
+  end if;
+
+  if has_second_vehicle and (
+    p_vehicle_2_make is null or p_vehicle_2_model is null or p_vehicle_2_time is null
+    or (appointment_weekday between 3 and 5 and p_vehicle_2_time <> p_appointment_time)
+    or (appointment_weekday in (6, 7) and p_vehicle_2_time <> p_appointment_time + interval '1 hour')
+  ) then
+    raise exception 'Two vehicles require the same weekday slot or two consecutive weekend slots.' using errcode = '22023';
+  end if;
+
+  if p_vehicle_year is null or nullif(btrim(p_vehicle_make), '') is null
+    or nullif(btrim(p_vehicle_model), '') is null
+    or p_location_type not in ('home', 'second')
+    or nullif(btrim(p_service_address), '') is null
+    or nullif(btrim(p_customer_name), '') is null
+    or nullif(btrim(p_customer_phone), '') is null then
+    raise exception 'Complete all required booking details.' using errcode = '22023';
+  end if;
+
+  perform pg_catalog.pg_advisory_xact_lock(hashtextextended('phone:' || normalized_phone, 0));
+  if request_ip_value is not null then
+    perform pg_catalog.pg_advisory_xact_lock(hashtextextended('ip:' || request_ip_value, 0));
+  end if;
+  select count(*) into recent_booking_count from public.appointments as a
+    where a.created_at >= now() - interval '24 hours'
+      and (a.customer_phone_normalized = normalized_phone
+        or (request_ip_value is not null and a.request_ip = request_ip_value));
+  if recent_booking_count >= 4 then
+    raise exception 'Booking limit reached: this phone number or IP address can make up to 4 successful bookings in 24 hours.' using errcode = 'P0001';
+  end if;
+
+  insert into public.appointments (
+    appointment_date, appointment_time, vehicle_year, vehicle_make, vehicle_model, vehicle_trim,
+    vehicle_2_year, vehicle_2_make, vehicle_2_model, vehicle_2_trim,
+    location_type, service_address, customer_name, customer_email, customer_phone,
+    customer_phone_normalized, request_ip
+  ) values (
+    p_appointment_date, p_appointment_time, p_vehicle_year, btrim(p_vehicle_make), btrim(p_vehicle_model),
+    nullif(btrim(coalesce(p_vehicle_trim, '')), ''), p_vehicle_2_year, nullif(btrim(p_vehicle_2_make), ''),
+    nullif(btrim(p_vehicle_2_model), ''), nullif(btrim(coalesce(p_vehicle_2_trim, '')), ''),
+    p_location_type, btrim(p_service_address), btrim(p_customer_name), nullif(btrim(coalesce(p_customer_email, '')), ''),
+    btrim(p_customer_phone), normalized_phone, request_ip_value
+  ) returning id into new_appointment_id;
+
+  if has_second_vehicle and appointment_weekday in (6, 7) then
+    insert into public.booking_slots (appointment_id, appointment_date, appointment_time)
+    values (new_appointment_id, p_appointment_date, p_vehicle_2_time);
+  end if;
+  return new_appointment_id;
+end;
+$$;
+
+revoke all on function public.create_appointment_v2(date, time without time zone, integer, text, text, text, integer, text, text, text, time without time zone, text, text, text, text, text) from public;
+grant execute on function public.create_appointment_v2(date, time without time zone, integer, text, text, text, integer, text, text, text, time without time zone, text, text, text, text, text) to anon, authenticated;
