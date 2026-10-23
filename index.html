@@ -46,9 +46,11 @@
     .eyebrow { color: var(--green); font-size: 11px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase; }
     h1 { margin: 9px 0 0; font-size: clamp(28px, 4vw, 42px); line-height: 1.2; letter-spacing: 0; }
     .intro-copy { max-width: 320px; margin: 0 0 4px; color: var(--muted); font-size: 14px; line-height: 1.7; }
-    .price-callout { display: flex; width: min(250px, 100%); align-items: center; justify-content: space-between; gap: 16px; margin: 14px 0 0; padding: 9px 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); color: var(--green-dark); font-size: 13px; font-weight: 700; }
+    .price-callout { display: grid; grid-template-columns: minmax(0, 1fr) auto; width: min(250px, 100%); align-items: center; column-gap: 16px; margin: 14px 0 0; padding: 9px 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); color: var(--green-dark); font-size: 13px; font-weight: 700; }
     .price-callout strong { color: var(--green-dark); font-size: 18px; line-height: 1; }
+    .price-extra { grid-column: 2; grid-row: 2; align-self: start; display: block; color: var(--green); font-size: 13px; }
     .price-callout .zh { display: block; margin-top: 3px; color: var(--muted); font-size: 10px; font-weight: 500; }
+    .price-callout small { grid-column: 1; grid-row: 2; display: block; margin-top: 6px; color: var(--muted); font-size: 10px; font-weight: 500; line-height: 1.4; }
     .booking-layout { display: grid; grid-template-columns: minmax(0, 1fr) 310px; align-items: start; gap: 20px; }
     form { min-width: 0; }
     .form-panel, .side-panel { border: 1px solid var(--line); border-radius: 7px; background: var(--surface); }
@@ -191,11 +193,12 @@
   <main>
     <section class="intro" aria-labelledby="page-title">
       <div>
-        <div class="eyebrow">SEASONAL TIRE CHANGE · 季节换胎</div>
         <h1 id="page-title">Tire change, on your time.<span class="zh zh-copy">把换胎时间，安排妥当。</span></h1>
         <div class="price-callout" aria-label="Seasonal tire swap price / 季节换胎价格">
           <span>Seasonal tire swap<span class="zh">季节换胎</span></span>
           <strong>$50</strong>
+          <small>Over 10 km from Kanata Lake<br>距 Kanata Lake 超过 10 公里</small>
+          <span class="price-extra">+$10</span>
         </div>
       </div>
       <p class="intro-copy bilingual-copy">Enter your vehicle and service address, then choose a time that works for you. Weekend appointments are available.<span class="zh zh-copy">填写车辆和服务地点，再挑一个方便的时间。周末时段也开放预约。</span></p>
@@ -270,19 +273,10 @@
 
         <section aria-labelledby="location-heading">
           <h2 class="section-heading" id="location-heading"><span class="section-number">03</span><span>Service address<span class="zh">服务地点</span></span></h2>
-          <p class="group-label">Choose a service address <span class="zh">选择本次换胎地点</span></p>
-          <div class="address-choice" role="radiogroup" aria-label="Service address / 服务地点">
-            <div class="choice"><input id="location-home" type="radio" name="location" value="home" checked><label for="location-home"><span aria-hidden="true">⌂</span><span class="choice-text">Home address<span class="zh">家庭地址</span></span></label></div>
-            <div class="choice"><input id="location-second" type="radio" name="location" value="second"><label for="location-second"><span aria-hidden="true">＋</span><span class="choice-text">Second address<span class="zh">第二地点</span></span></label></div>
-          </div>
-          <p class="address-hint bilingual-copy">Add both addresses and choose where this appointment should take place.<span class="zh zh-copy">可填写两个地点，预约时选择本次服务地址。</span></p>
+          <input type="hidden" name="location" value="home">
+          <p class="address-hint bilingual-copy">Enter the address for this appointment.<span class="zh zh-copy">请输入本次预约的服务地址。</span></p>
           <div class="field address-field" id="home-address-field">
-            <label for="home-address">Home address <span class="zh">家庭地址</span></label>
             <input id="home-address" name="homeAddress" placeholder="Street address / 街道地址" autocomplete="street-address" required>
-          </div>
-          <div class="field address-field" id="second-address-field" hidden>
-            <label for="second-address">Second address <span class="zh">第二地点地址</span></label>
-            <input id="second-address" name="secondAddress" placeholder="Street address / 街道地址" autocomplete="street-address" disabled>
           </div>
         </section>
 
@@ -329,7 +323,6 @@
               <div class="hours-row"><span>Mon–Tue<br>周一、周二</span><strong>Unavailable<br>暂停预约</strong></div>
               <div class="hours-row"><span>Wed–Fri<br>周三至周五</span><strong>5:00 PM</strong></div>
               <div class="hours-row"><span>Sat–Sun<br>周六、周日</span><strong>8:00 AM — 5:00 PM</strong></div>
-              <div class="hours-row"><span>Over 10 km from Kanata Lake<br>距 Kanata Lake 超过 10 公里</span><strong>+$10</strong></div>
           </div>
           <div class="side-rule"></div>
           <div class="service-note"><b aria-hidden="true">i</b><span>Please verify your vehicle details and address so the technician can prepare.<br>请核对车型款式和地址，确保技师能为你的车辆做好准备。</span></div>
@@ -337,8 +330,6 @@
       </aside>
     </div>
   </main>
-
-  <footer>Seasonal tire booking / 季节换胎预约</footer>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="supabase-config.js"></script>
@@ -353,9 +344,6 @@
     const confirmation = document.querySelector("#confirmation");
     const formError = document.querySelector("#form-error");
     const homeAddress = document.querySelector("#home-address");
-    const secondAddress = document.querySelector("#second-address");
-    const homeAddressField = document.querySelector("#home-address-field");
-    const secondAddressField = document.querySelector("#second-address-field");
     const vehicleMakeSelect = document.querySelector("#vehicle-make");
     const vehicleMakeOtherField = document.querySelector("#vehicle-make-other-field");
     const vehicleMakeOther = document.querySelector("#vehicle-make-other");
@@ -660,21 +648,6 @@
       }
     }, 60 * 1000);
 
-    document.querySelectorAll('input[name="location"]').forEach((radio) => {
-      radio.addEventListener("change", () => {
-        const isHome = radio.value === "home" && radio.checked;
-        const isSecond = radio.value === "second" && radio.checked;
-        if (!isHome && !isSecond) return;
-        homeAddressField.hidden = !isHome;
-        secondAddressField.hidden = !isSecond;
-        homeAddress.disabled = !isHome;
-        homeAddress.required = isHome;
-        secondAddress.disabled = !isSecond;
-        secondAddress.required = isSecond;
-        formError.classList.remove("visible");
-      });
-    });
-
     form.addEventListener("submit", async (event) => {
       event.preventDefault();
       confirmation.classList.remove("visible");
@@ -692,7 +665,7 @@
 
       const data = new FormData(form);
       const location = data.get("location");
-      const address = location === "home" ? data.get("homeAddress") : data.get("secondAddress");
+      const address = data.get("homeAddress");
       const makeChoice = data.get("makeChoice");
       const modelChoice = data.get("modelChoice");
       const vehicleMake = makeChoice === "__other__" ? data.get("makeOther").trim() : makeChoice;
@@ -736,7 +709,7 @@
       heading.textContent = "Booking confirmed / 预约已确认";
       const details = [
         `Vehicle / 车辆: ${vehicleText}`,
-        `Address / 地点: ${location === "home" ? "Home / 家庭地址" : "Second address / 第二地点"} · ${address}`,
+        `Address / 地点: Home / 家庭地址 · ${address}`,
         `Appointment / 时间: ${dateText} · ${timeText}`,
         `Contact / 联系人: ${data.get("customerName")} · ${data.get("customerPhone")} · ${data.get("customerEmail")}`
       ];
