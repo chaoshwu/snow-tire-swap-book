@@ -4,16 +4,16 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#f6f5ef">
-<meta name="description" content="Book your seasonal tire swap in Kanata. 在线预约 Kanata 换胎服务。">
+<meta name="description" content="Book an on-rim seasonal tire swap in Kanata. We swap complete wheel and tire assemblies only; tire mounting is not provided. 在线预约 Kanata 带轮毂换胎服务。">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://kanata-tire.pages.dev/">
 <meta property="og:title" content="Kanata Tire — Tire Booking">
-<meta property="og:description" content="Book your seasonal tire swap in Kanata. 在线预约 Kanata 换胎服务。">
+<meta property="og:description" content="Book an on-rim seasonal tire swap in Kanata. Complete wheel and tire assemblies only. 仅提供带轮毂换胎。">
 <meta property="og:image" content="https://images.unsplash.com/photo-1585252522525-4f9ad48a24ea?auto=format&fit=crop&w=1200&h=630&q=85">
 <meta property="og:image:alt" content="Close-up of a car tire tread">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Kanata Tire — Tire Booking">
-<meta name="twitter:description" content="Book your seasonal tire swap in Kanata. 在线预约 Kanata 换胎服务。">
+<meta name="twitter:description" content="Book an on-rim seasonal tire swap in Kanata. Complete wheel and tire assemblies only. 仅提供带轮毂换胎。">
 <meta name="twitter:image" content="https://images.unsplash.com/photo-1585252522525-4f9ad48a24ea?auto=format&fit=crop&w=1200&h=630&q=85">
   <title>Kanata Tire — Tire Booking</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -161,6 +161,9 @@
     .side-rule { height: 1px; margin: 16px 0; background: var(--line); }
     .service-note { display: flex; align-items: flex-start; gap: 9px; color: #555a51; font-size: 11px; line-height: 1.6; }
     .service-note b { color: var(--orange); font-size: 14px; line-height: 1; }
+    .service-scope { display: inline-flex; flex-direction: column; gap: 2px; max-width: 780px; margin-top: 17px; padding: 10px 14px 10px 12px; border-left: 3px solid var(--orange); background: #fff7ef; color: #9b4a28; font-size: 12px; line-height: 1.45; }
+    .service-scope strong { font-size: 12px; }
+    .service-scope .zh { color: #6b5a4c; font-weight: 500; }
     .confirmation { display: none; margin-top: 16px; padding: 17px; border: 1px solid #b8d0b7; border-radius: 4px; background: var(--soft-green); }
     .confirmation.visible { display: block; }
     .confirmation h2 { margin: 0 0 7px; font-size: 15px; }
@@ -218,6 +221,7 @@
           <small>Over 10 km from Kanata Lake<br>距 Kanata Lake 超过 10 公里</small>
           <span class="price-extra">+$10</span>
         </div>
+        <div class="service-scope" role="note"><strong>On-rim tire swap only</strong><span class="zh">仅提供带轮毂换胎</span></div>
       </div>
       <p class="intro-copy bilingual-copy">Enter your vehicle and service address, then choose a time that works for you. Weekend appointments are available.<span class="zh zh-copy">填写车辆和服务地点，再挑一个方便的时间。周末时段也开放预约。</span></p>
     </section>
@@ -360,7 +364,6 @@
               <div class="hours-row"><span>Sat–Sun<br>周六、周日</span><strong>8:00 AM — 5:00 PM</strong></div>
           </div>
           <div class="side-rule"></div>
-          <div class="service-note"><b aria-hidden="true">i</b><span>Please verify your vehicle details and address so the technician can prepare.<br>请核对车型款式和地址，确保技师能为你的车辆做好准备。</span></div>
         </div>
       </aside>
     </div>
