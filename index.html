@@ -86,7 +86,7 @@
     .bilingual-copy .en { display: block; margin-top: 4px; line-height: 1.55; }
     .group-label .en { margin-left: 5px; }
     .zh { color: var(--muted); font-size: 10px; font-weight: 500; }
-    .field label .zh, .group-label .zh { margin-left: 5px; }
+    .field label .zh, .group-label .zh { display: inline; margin-left: 5px; color: #5f655d; font-size: 10px; line-height: 1.2; white-space: nowrap; }
     .zh-copy { display: block; margin-top: 4px; line-height: 1.55; }
     .section-heading .zh, .side-title .zh { display: block; margin-top: 3px; }
     .choice-text .zh { display: block; margin: 2px 0 0; }
@@ -243,12 +243,12 @@
           <div class="field-grid">
             <div class="field">
               <label for="vehicle-year">Year <span class="zh">年份</span></label>
-              <select id="vehicle-year" name="year" required><option value="">Select year / 选择年份</option></select>
+              <select id="vehicle-year" name="year" required><option value="">Year / 年</option></select>
             </div>
             <div class="field">
               <label for="vehicle-make">Make <span class="zh">品牌</span></label>
               <select id="vehicle-make" name="makeChoice" required>
-                <option value="">Select make / 选择品牌</option>
+                <option value="">Make / 品牌</option>
                 <option>Acura</option><option>Audi</option><option>BMW</option><option>Buick</option>
                 <option>Cadillac</option><option>Chevrolet</option><option>Chrysler</option><option>Dodge</option>
                 <option>Ford</option><option>Genesis</option><option>GMC</option><option>Honda</option>
@@ -267,7 +267,7 @@
             <div class="field">
               <label for="vehicle-model">Model <span class="zh">车型</span></label>
               <select id="vehicle-model" name="modelChoice" required disabled>
-                <option value="">Select make first / 请先选择品牌</option>
+                <option value="">Make first / 先选品牌</option>
               </select>
               <div class="field" id="vehicle-model-other-field" hidden>
                 <label for="vehicle-model-other">Enter model <span class="zh">输入车型</span></label>
@@ -511,7 +511,7 @@
       vehicleMakeOther.disabled = !customMake;
       vehicleMakeOther.required = customMake;
       if (!customMake) vehicleMakeOther.value = "";
-      vehicleModelSelect.replaceChildren(new Option("Select model / 选择车型", ""));
+      vehicleModelSelect.replaceChildren(new Option("Model / 型号", ""));
       vehicleModelOtherField.hidden = true;
       vehicleModelOther.disabled = true;
       vehicleModelOther.required = false;
@@ -572,7 +572,7 @@
       makeOther.disabled = !customMake;
       makeOther.required = customMake;
       if (!customMake) makeOther.value = "";
-      modelSelect.replaceChildren(new Option("Select model / 选择车型", ""));
+      modelSelect.replaceChildren(new Option("Model / 型号", ""));
       modelOtherField.hidden = true;
       modelOther.disabled = true;
       modelOther.required = false;
