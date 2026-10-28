@@ -948,7 +948,7 @@
           headers: {
             "Content-Type": "application/json",
             "X-Goog-Api-Key": apiKey,
-            "X-Goog-FieldMask": "routes.distanceMeters"
+            "X-Goog-FieldMask": "routes.distanceMeters,geocodingResults.destination.type,geocodingResults.destination.geocodedAddress"
           },
           body: JSON.stringify({
             origin: { address: SERVICE_ORIGIN },
@@ -966,6 +966,44 @@
         const route = data.routes && data.routes[0];
         if (!route || typeof route.distanceMeters !== "number") {
           if (isFinal) showUnknown(); else distanceBadge.className = "distance-badge";
+          return;
+        }
+
+        // 验证 Google 实际匹配到的地址质量
+        const geocoding = data.geocodingResults && data.geocodingResults.destination;
+        const types = (geocoding && geocoding.type) || [];
+        const resolvedAddress = (geocoding && geocoding.geocodedAddress) || "";
+
+        // 1. 检查是否退化成了宽泛的“城市/区域级别”（说明输入的街道不存在，被 Google 忽略了）
+        const isBroadAreaOnly = types.length > 0 && types.every(t =>
+          ["locality", "sublocality", "political", "administrative_area_level_1", "administrative_area_level_2", "administrative_area_level_3", "neighborhood", "country"].includes(t)
+        );
+
+        // 2. 检查 Google 返回的门牌号是否能匹配用户输入的门牌号
+        const userNumberMatch = rawAddress.match(/^\d+/);
+        const userNumber = userNumberMatch ? userNumberMatch[0] : "";
+        const hasMatchedNumber = userNumber && resolvedAddress.includes(userNumber);
+
+        // 如果街道被 Google 丢弃仅匹配到了市中心，或者门牌完全不存在（如 897 test testw）
+        if (isBroadAreaOnly || (userNumber && !hasMatchedNumber && !types.includes("street_address") && !types.includes("premise"))) {
+          if (isFinal) {
+            showBadge("unknown",
+              `${icons.help} <span>Address not recognized — please check street and number / 未识别到该门牌街道，请核对地址</span>`);
+          } else {
+            distanceBadge.className = "distance-badge";
+          }
+          return;
+        }
+
+        // 3. 校验行政区域是否在渥太华周边
+        const isInRegion = /kanata|ottawa|nepean|stittsville|carp|dunrobin|almonte|carleton\s*place|ontario|\bon\b/i.test(resolvedAddress);
+        if (!isInRegion && resolvedAddress.length > 0) {
+          if (isFinal) {
+            showBadge("far",
+              `${icons.warning} <span>Out of service area / 超出服务区域</span>`);
+          } else {
+            distanceBadge.className = "distance-badge";
+          }
           return;
         }
 
