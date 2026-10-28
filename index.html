@@ -38,7 +38,8 @@
     }
 
     * { box-sizing: border-box; }
-    body { margin: 0; background: var(--paper); color: var(--ink); }
+    html, body { overflow-x: hidden; }
+    body { margin: 0; background: var(--paper); color: var(--ink); -webkit-text-size-adjust: 100%; }
     button, input, select { font: inherit; }
     button, select { cursor: pointer; }
     .topbar {
@@ -189,6 +190,7 @@
       .intro-copy { max-width: 100%; font-size: 13px; }
       .booking-layout { grid-template-columns: 1fr; }
       .form-panel { padding: 19px 16px; }
+      input, select { font-size: 16px; }
       .side-panel { display: grid; grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr); }
       .side-image, .side-image img { height: 100%; min-height: 190px; }
       .side-content { padding: 16px 14px; }
