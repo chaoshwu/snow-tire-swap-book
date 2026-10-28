@@ -173,6 +173,14 @@
     .confirmation .demo-note { margin-top: 10px; color: var(--muted); font-size: 11px; }
     .form-error { display: none; margin: 14px 0 0; color: #a33e28; font-size: 12px; }
     .form-error.visible { display: block; }
+    .distance-badge { display: none; align-items: center; gap: 8px; margin-top: 8px; padding: 8px 11px; border-radius: 4px; font-size: 12px; line-height: 1.4; }
+    .distance-badge.visible { display: flex; }
+    .distance-badge.checking { background: #f3f3ef; color: var(--muted); }
+    .distance-badge.nearby { background: #edf2e9; color: #2d5e40; }
+    .distance-badge.far { background: #fff5ef; color: #7a3a1e; }
+    .distance-badge.unknown { background: #f3f3ef; color: var(--muted); }
+    .distance-badge svg { flex: 0 0 14px; width: 14px; height: 14px; }
+    .distance-badge strong { font-weight: 700; }
     footer { width: min(1120px, calc(100% - 40px)); margin: 0 auto 28px; color: var(--muted); font-size: 11px; }
     @media (max-width: 820px) {
       main { margin-top: 25px; }
@@ -313,6 +321,7 @@
           <p class="address-hint bilingual-copy">Enter the address for this appointment.<span class="zh zh-copy">请输入本次预约的服务地址。</span></p>
           <div class="field address-field" id="home-address-field">
             <input id="home-address" name="homeAddress" placeholder="Street address / 街道地址" autocomplete="street-address" required>
+            <div id="distance-badge" class="distance-badge" role="status" aria-live="polite"></div>
           </div>
         </section>
 
@@ -368,6 +377,7 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="supabase-config.js"></script>
+  <script src="maps-config.js"></script>
   <script>
     const form = document.querySelector("#booking-form");
     const dateGrid = document.querySelector("#date-grid");
@@ -858,6 +868,81 @@
 
     addYearOptions();
     renderDates();
+
+    /* ── Distance check ─────────────────────────────────────────── */
+    const SERVICE_ORIGIN = "533 Remnor Ave, Ottawa, ON K2T 0A4, Canada";
+    const SURCHARGE_KM   = 10;
+    const distanceBadge  = document.querySelector("#distance-badge");
+    let distanceTimer    = null;
+    let mapsService      = null;
+
+    function showBadge(state, html) {
+      distanceBadge.className = `distance-badge visible ${state}`;
+      distanceBadge.innerHTML = html;
+    }
+
+    const icons = {
+      spin:    `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10" stroke-opacity=".25"/><path d="M12 2a10 10 0 0 1 10 10" stroke-linecap="round"><animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur=".8s" repeatCount="indefinite"/></path></svg>`,
+      check:   `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+      warning: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12" y2="17.01"/></svg>`,
+      help:    `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12" y2="17.01"/></svg>`,
+    };
+
+    function initDistanceService() {
+      const apiKey = (window.MAPS_CONFIG || {}).apiKey;
+      if (!apiKey || apiKey === "YOUR_GOOGLE_MAPS_API_KEY") return;
+      const script = document.createElement("script");
+      script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&callback=_mapsReady`;
+      script.async = true;
+      document.head.appendChild(script);
+    }
+
+    window._mapsReady = function () {
+      mapsService = new google.maps.DistanceMatrixService();
+      homeAddress.addEventListener("blur", onAddressBlur);
+      homeAddress.addEventListener("input", () => {
+        clearTimeout(distanceTimer);
+        distanceBadge.className = "distance-badge";
+      });
+    };
+
+    function onAddressBlur() {
+      const addr = homeAddress.value.trim();
+      if (addr.length < 6) { distanceBadge.className = "distance-badge"; return; }
+      clearTimeout(distanceTimer);
+      distanceTimer = setTimeout(() => checkDrivingDistance(addr), 300);
+    }
+
+    async function checkDrivingDistance(destination) {
+      showBadge("checking", `${icons.spin} Checking distance… / 正在计算距离…`);
+      mapsService.getDistanceMatrix(
+        { origins: [SERVICE_ORIGIN], destinations: [destination],
+          travelMode: google.maps.TravelMode.DRIVING,
+          region: "ca", unitSystem: google.maps.UnitSystem.METRIC },
+        (res, status) => {
+          if (status !== "OK") { showUnknown(); return; }
+          const el = res.rows[0].elements[0];
+          if (el.status !== "OK") { showUnknown(); return; }
+          const km = el.distance.value / 1000;
+          const kmStr = km.toFixed(1);
+          if (km <= SURCHARGE_KM) {
+            showBadge("nearby",
+              `${icons.check} <span><strong>${kmStr} km</strong> — within 10 km, standard rate applies / 在 10 公里范围内，正常收费 <strong>$50</strong></span>`);
+          } else {
+            showBadge("far",
+              `${icons.warning} <span><strong>${kmStr} km</strong> — over 10 km, <strong>+$10</strong> surcharge applies / 超出 10 公里，需加收 <strong>+$10</strong> 远程费用</span>`);
+          }
+        }
+      );
+    }
+
+    function showUnknown() {
+      showBadge("unknown",
+        `${icons.help} Address not recognized — distance will be confirmed after booking / 地址无法识别，预约后我们将确认距离`);
+    }
+
+    initDistanceService();
+    /* ── End distance check ──────────────────────────────────────── */
   </script>
 </body>
 </html>
