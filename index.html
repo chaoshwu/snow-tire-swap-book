@@ -86,7 +86,7 @@
     .section-heading .en { display: block; margin-top: 2px; color: var(--muted); font-size: 10px; font-weight: 500; }
     .section-number { display: grid; place-items: center; width: 25px; height: 25px; border-radius: 50%; background: var(--soft-green); color: var(--green); font-size: 12px; }
     .field-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 15px 13px; }
-    .vehicle-card .field-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+    .vehicle-card .field-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
     .vehicle-list { display: grid; gap: 15px; }
     .vehicle-card { padding: 14px; border: 1px solid var(--line); border-radius: 5px; background: #fff; }
     .vehicle-card-title { margin: 0 0 12px; color: var(--green-dark); font-size: 12px; font-weight: 700; }
@@ -208,6 +208,7 @@
       .booking-layout { grid-template-columns: minmax(0, 1fr) 260px; gap: 14px; }
       .form-panel { padding: 21px 19px; }
       .time-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+      .vehicle-card .field-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .date-grid { gap: 4px; }
     }
     @media (max-width: 650px) {
@@ -230,7 +231,6 @@
       .field-grid { grid-template-columns: 1fr; gap: 13px 0; }
       .field.full { grid-column: auto; }
       .vehicle-card .field-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 11px 9px; }
-      .vehicle-card .field-model { grid-column: 1 / -1; }
       .weekday-grid, .date-grid { gap: 3px; }
       .date-button { max-width: 38px; min-height: 36px; }
       .time-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
@@ -303,11 +303,14 @@
             </div>
             <div class="field field-model">
               <select id="vehicle-model" name="modelChoice" required disabled aria-label="Model / 车型">
-                <option value="">Make first / 先选品牌</option>
+                <option value="">Model / 车型</option>
               </select>
               <div class="field" id="vehicle-model-other-field" hidden>
                 <input id="vehicle-model-other" name="modelOther" placeholder="Enter model / 输入车型" autocomplete="off" disabled aria-label="Enter model / 输入车型">
               </div>
+            </div>
+            <div class="field field-trim">
+              <input id="vehicle-trim" name="trim" placeholder="Trim (optional) / 配置（选填）" autocomplete="off" aria-label="Trim (optional) / 配置（选填）">
             </div>
           </div>
           </div>
@@ -593,7 +596,7 @@
       fieldGrid.querySelectorAll("[id]").forEach((element) => { element.id = element.id.replace("vehicle-", "vehicle-2-"); });
       fieldGrid.querySelectorAll("[for]").forEach((element) => { element.htmlFor = element.htmlFor.replace("vehicle-", "vehicle-2-"); });
       fieldGrid.querySelectorAll("[name]").forEach((element) => {
-        const names = { year: "year2", makeChoice: "makeChoice2", makeOther: "makeOther2", modelChoice: "modelChoice2", modelOther: "modelOther2" };
+        const names = { year: "year2", makeChoice: "makeChoice2", makeOther: "makeOther2", modelChoice: "modelChoice2", modelOther: "modelOther2", trim: "trim2" };
         element.name = names[element.name] || element.name;
         if (element.tagName === "INPUT" || element.tagName === "SELECT") element.value = "";
       });
@@ -840,7 +843,7 @@
         const vehicleModel = makeChoice === "__other__" || modelChoice === "__other__"
           ? data.get(`modelOther${suffix}`).trim()
           : modelChoice;
-        return { year: Number(data.get(`year${suffix}`)), make: vehicleMake, model: vehicleModel };
+        return { year: Number(data.get(`year${suffix}`)), make: vehicleMake, model: vehicleModel, trim: (data.get(`trim${suffix}`) || "").trim() };
       }
       const vehicle1 = readVehicle();
       const vehicle2 = vehicleCount === 2 ? readVehicle("2") : null;
@@ -851,7 +854,7 @@
       const dateText = `${monthNames[selectedDate.getMonth()]} ${selectedDate.getDate()}, ${selectedDate.getFullYear()} (${weekdayNames[selectedDate.getDay()]})`;
       const timeHour = Number(selectedTime.slice(0, 2));
       const timeText = `${timeHour % 12 || 12}:00 ${timeHour >= 12 ? "PM" : "AM"} / ${timeHour >= 12 ? "下午" : "上午"} ${timeHour % 12 || 12}:00`;
-      const vehicleText = [vehicle1, vehicle2].filter(Boolean).map((vehicle) => [vehicle.year, vehicle.make, vehicle.model].filter(Boolean).join(" "));
+      const vehicleText = [vehicle1, vehicle2].filter(Boolean).map((vehicle) => [vehicle.year, vehicle.make, vehicle.model, vehicle.trim].filter(Boolean).join(" "));
 
       const { error } = await supabaseClient.rpc("create_appointment_v2", {
         p_appointment_date: formatDate(selectedDate),
@@ -859,11 +862,11 @@
         p_vehicle_year: vehicle1.year,
         p_vehicle_make: vehicle1.make,
         p_vehicle_model: vehicle1.model,
-        p_vehicle_trim: null,
+        p_vehicle_trim: vehicle1.trim || null,
         p_vehicle_2_year: vehicle2?.year || null,
         p_vehicle_2_make: vehicle2?.make || null,
         p_vehicle_2_model: vehicle2?.model || null,
-        p_vehicle_2_trim: null,
+        p_vehicle_2_trim: vehicle2?.trim || null,
         p_vehicle_2_time: secondTime,
         p_location_type: location,
         p_service_address: address,
