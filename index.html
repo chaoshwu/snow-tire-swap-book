@@ -904,22 +904,21 @@
         distanceTimer = setTimeout(() => checkDrivingDistance(val, false), 1200);
       } else {
         // 如果输入很短或还在打字，不显示未完成的误导提示
-        if (!distanceBadge.classList.contains("nearby")) {
-          distanceBadge.className = "distance-badge";
-        }
+        distanceBadge.className = "distance-badge";
+        lastCheckedAddr = "";
       }
     });
 
     homeAddress.addEventListener("change", () => {
       clearTimeout(distanceTimer);
       const val = homeAddress.value.trim();
-      if (val.length >= 5) checkDrivingDistance(val, true);
+      if (val) checkDrivingDistance(val, true);
     });
 
     homeAddress.addEventListener("blur", () => {
       clearTimeout(distanceTimer);
       const val = homeAddress.value.trim();
-      if (val.length >= 5) checkDrivingDistance(val, true);
+      if (val) checkDrivingDistance(val, true);
     });
 
     async function checkDrivingDistance(rawAddress, isFinal = false) {
@@ -930,16 +929,21 @@
       const words = rawAddress.split(/\s+/).filter(Boolean);
       // 地址结构不完整（比如没有数字门牌号，或者只有一个残缺单词）
       const seemsIncomplete = !(/^\d+/.test(rawAddress)) || words.length < 2 || words[words.length - 1].length < 3;
-      if (!isFinal && seemsIncomplete) {
+      if (seemsIncomplete) {
+        if (isFinal) {
+          lastCheckedAddr = rawAddress;
+          showBadge("unknown",
+            `${icons.help} <span>Address not recognized — please check street and number / 未识别到该门牌街道，请核对地址</span>`);
+        }
         return;
       }
 
       lastCheckedAddr = rawAddress;
       showBadge("checking", `${icons.spin} Checking driving distance… / 正在计算驾车距离…`);
 
-      // 锁定搜索范围：优先拼接 Kanata，保证就近匹配，防止漂移到整个大渥太华郊区
-      const dest = !/ottawa|kanata|nepean|stittsville|orleans|barrhaven|\bon\b|ontario/i.test(rawAddress)
-        ? `${rawAddress}, Kanata, ON, Canada`
+      // 默认拼接 Ottawa, ON（在加拿大市政区划中完整覆盖 Kanata, Stittsville, Nepean, Barrhaven 等邻近服务社区）
+      const dest = !/ottawa|kanata|nepean|stittsville|orleans|barrhaven|carp|dunrobin|\bon\b|ontario/i.test(rawAddress)
+        ? `${rawAddress}, Ottawa, ON, Canada`
         : rawAddress;
 
       try {
@@ -948,7 +952,7 @@
           headers: {
             "Content-Type": "application/json",
             "X-Goog-Api-Key": apiKey,
-            "X-Goog-FieldMask": "routes.distanceMeters,geocodingResults.destination.type,geocodingResults.destination.geocodedAddress"
+            "X-Goog-FieldMask": "routes.distanceMeters,geocodingResults.destination.type,geocodingResults.destination.partialMatch"
           },
           body: JSON.stringify({
             origin: { address: SERVICE_ORIGIN },
@@ -957,50 +961,31 @@
           })
         });
 
+        if (homeAddress.value.trim() !== rawAddress) return;
         if (!response.ok) {
           if (isFinal) showUnknown(); else distanceBadge.className = "distance-badge";
           return;
         }
 
         const data = await response.json();
+        if (homeAddress.value.trim() !== rawAddress) return; // 输入已变化，丢弃过期结果
         const route = data.routes && data.routes[0];
         if (!route || typeof route.distanceMeters !== "number") {
           if (isFinal) showUnknown(); else distanceBadge.className = "distance-badge";
           return;
         }
 
-        // 验证 Google 实际匹配到的地址质量
+        // 验证 Google 实际匹配到的地址质量（Routes API 只返回 type / partialMatch）
         const geocoding = data.geocodingResults && data.geocodingResults.destination;
         const types = (geocoding && geocoding.type) || [];
-        const resolvedAddress = (geocoding && geocoding.geocodedAddress) || "";
+        const isPartial = !!(geocoding && geocoding.partialMatch);
+        const isPreciseType = types.some(t => ["street_address", "premise", "subpremise", "route"].includes(t));
 
-        // 1. 检查是否退化成了宽泛的“城市/区域级别”（说明输入的街道不存在，被 Google 忽略了）
-        const isBroadAreaOnly = types.length > 0 && types.every(t =>
-          ["locality", "sublocality", "political", "administrative_area_level_1", "administrative_area_level_2", "administrative_area_level_3", "neighborhood", "country"].includes(t)
-        );
-
-        // 2. 检查 Google 返回的门牌号是否能匹配用户输入的门牌号
-        const userNumberMatch = rawAddress.match(/^\d+/);
-        const userNumber = userNumberMatch ? userNumberMatch[0] : "";
-        const hasMatchedNumber = userNumber && resolvedAddress.includes(userNumber);
-
-        // 如果街道被 Google 丢弃仅匹配到了市中心，或者门牌完全不存在（如 897 test testw）
-        if (isBroadAreaOnly || (userNumber && !hasMatchedNumber && !types.includes("street_address") && !types.includes("premise"))) {
+        // partialMatch 或未精确到街道/门牌，说明输入地址不存在（如 897 test testw）
+        if (isPartial || !isPreciseType) {
           if (isFinal) {
             showBadge("unknown",
               `${icons.help} <span>Address not recognized — please check street and number / 未识别到该门牌街道，请核对地址</span>`);
-          } else {
-            distanceBadge.className = "distance-badge";
-          }
-          return;
-        }
-
-        // 3. 校验行政区域是否在渥太华周边
-        const isInRegion = /kanata|ottawa|nepean|stittsville|carp|dunrobin|almonte|carleton\s*place|ontario|\bon\b/i.test(resolvedAddress);
-        if (!isInRegion && resolvedAddress.length > 0) {
-          if (isFinal) {
-            showBadge("far",
-              `${icons.warning} <span>Out of service area / 超出服务区域</span>`);
           } else {
             distanceBadge.className = "distance-badge";
           }
