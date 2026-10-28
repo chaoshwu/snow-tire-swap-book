@@ -173,6 +173,12 @@
     .confirmation .demo-note { margin-top: 10px; color: var(--muted); font-size: 11px; }
     .form-error { display: none; margin: 14px 0 0; color: #a33e28; font-size: 12px; }
     .form-error.visible { display: block; }
+    .ac-wrap { position: relative; }
+    .ac-list { position: absolute; z-index: 20; left: 0; right: 0; top: 100%; margin: 4px 0 0; padding: 4px 0; list-style: none; background: #fff; border: 1px solid #d8d8d2; border-radius: 4px; box-shadow: 0 6px 18px rgba(0,0,0,.1); max-height: 240px; overflow-y: auto; }
+    .ac-list[hidden] { display: none; }
+    .ac-list li { padding: 9px 12px; font-size: 14px; cursor: pointer; line-height: 1.35; }
+    .ac-list li small { display: block; color: var(--muted); font-size: 12px; }
+    .ac-list li[aria-selected="true"], .ac-list li:hover { background: #f3f3ef; }
     .distance-badge { display: none; align-items: center; gap: 8px; margin-top: 8px; padding: 8px 11px; border-radius: 4px; font-size: 12px; line-height: 1.4; }
     .distance-badge.visible { display: flex; }
     .distance-badge.checking { background: #f3f3ef; color: var(--muted); }
@@ -320,7 +326,10 @@
           <input type="hidden" name="location" value="home">
           <p class="address-hint bilingual-copy">Enter the address for this appointment.<span class="zh zh-copy">请输入本次预约的服务地址。</span></p>
           <div class="field address-field" id="home-address-field">
-            <input id="home-address" name="homeAddress" placeholder="Street address / 街道地址" autocomplete="street-address" required>
+            <div class="ac-wrap">
+              <input id="home-address" name="homeAddress" placeholder="Street address / 街道地址" autocomplete="off" role="combobox" aria-expanded="false" aria-controls="address-suggestions" aria-autocomplete="list" required>
+              <ul id="address-suggestions" class="ac-list" role="listbox" hidden></ul>
+            </div>
             <div id="distance-badge" class="distance-badge" role="status" aria-live="polite"></div>
           </div>
         </section>
@@ -888,12 +897,165 @@
       help:    `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12" y2="17.01"/></svg>`,
     };
 
+    /* ── Places Autocomplete ─────────────────────────────────────── */
+    const acList = document.querySelector("#address-suggestions");
+    const newToken = () => (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random());
+    let acEnabled = true;       // Places API 不可用时退回纯文本校验
+    let acToken = newToken();
+    let acTimer = null;
+    let acSeq = 0;
+    let acItems = [];
+    let acIndex = -1;
+    let selectedPlaceId = "";
+    let selectedText = "";
+
+    function closeSuggestions() {
+      acList.hidden = true;
+      acList.innerHTML = "";
+      acItems = [];
+      acIndex = -1;
+      homeAddress.setAttribute("aria-expanded", "false");
+    }
+
+    function setActive(i) {
+      acIndex = i;
+      [...acList.children].forEach((li, n) => li.setAttribute("aria-selected", String(n === i)));
+    }
+
+    function renderSuggestions(items) {
+      acItems = items;
+      acIndex = -1;
+      acList.innerHTML = "";
+      items.forEach((it, i) => {
+        const li = document.createElement("li");
+        li.setAttribute("role", "option");
+        const main = document.createElement("span");
+        main.textContent = it.main;
+        li.appendChild(main);
+        if (it.secondary) {
+          const sub = document.createElement("small");
+          sub.textContent = it.secondary;
+          li.appendChild(sub);
+        }
+        // mousedown 阶段阻止失焦，避免点击建议前触发 blur 校验
+        li.addEventListener("mousedown", e => { e.preventDefault(); chooseSuggestion(i); });
+        acList.appendChild(li);
+      });
+      acList.hidden = items.length === 0;
+      homeAddress.setAttribute("aria-expanded", String(items.length > 0));
+    }
+
+    async function fetchSuggestions(input) {
+      const apiKey = (window.MAPS_CONFIG || {}).apiKey;
+      if (!apiKey || apiKey === "YOUR_GOOGLE_MAPS_API_KEY") { acEnabled = false; return; }
+      const seq = ++acSeq;
+      try {
+        const res = await fetch("https://places.googleapis.com/v1/places:autocomplete", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-Goog-Api-Key": apiKey,
+            "X-Goog-FieldMask": "suggestions.placePrediction.placeId,suggestions.placePrediction.text.text,suggestions.placePrediction.structuredFormat"
+          },
+          body: JSON.stringify({
+            input,
+            sessionToken: acToken,
+            languageCode: "en",
+            includedRegionCodes: ["ca"],
+            locationBias: { circle: { center: { latitude: 45.3, longitude: -75.9 }, radius: 30000 } }
+          })
+        });
+        if (seq !== acSeq) return;
+        if (!res.ok) { acEnabled = false; closeSuggestions(); return; }
+        const data = await res.json();
+        if (seq !== acSeq) return;
+        const items = (data.suggestions || [])
+          .map(x => x.placePrediction)
+          .filter(Boolean)
+          .map(p => ({
+            placeId: p.placeId,
+            text: p.text.text,
+            main: (p.structuredFormat && p.structuredFormat.mainText.text) || p.text.text,
+            secondary: (p.structuredFormat && p.structuredFormat.secondaryText && p.structuredFormat.secondaryText.text) || ""
+          }));
+        lastSuggestionCount = items.length;
+        renderSuggestions(items);
+      } catch (e) {
+        if (seq === acSeq) { acEnabled = false; closeSuggestions(); }
+      }
+    }
+    let lastSuggestionCount = -1;
+
+    function chooseSuggestion(i) {
+      const it = acItems[i];
+      if (!it) return;
+      homeAddress.value = it.text;
+      selectedPlaceId = it.placeId;
+      selectedText = it.text;
+      acToken = newToken(); // 一次选择即结束一个会话
+      closeSuggestions();
+      checkPlaceDistance(it.placeId, it.text);
+    }
+
+    async function checkPlaceDistance(placeId, text) {
+      const apiKey = (window.MAPS_CONFIG || {}).apiKey;
+      showBadge("checking", `${icons.spin} Checking driving distance… / 正在计算驾车距离…`);
+      try {
+        const res = await fetch("https://routes.googleapis.com/directions/v2:computeRoutes", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "X-Goog-Api-Key": apiKey, "X-Goog-FieldMask": "routes.distanceMeters" },
+          body: JSON.stringify({ origin: { address: SERVICE_ORIGIN }, destination: { placeId }, travelMode: "DRIVE" })
+        });
+        if (selectedPlaceId !== placeId || homeAddress.value !== text) return;
+        const data = res.ok ? await res.json() : null;
+        const route = data && data.routes && data.routes[0];
+        if (!route || typeof route.distanceMeters !== "number") { showUnknown(); return; }
+        showDistance(route.distanceMeters / 1000);
+      } catch (e) {
+        showUnknown();
+      }
+    }
+
+    function showDistance(km) {
+      const kmStr = km.toFixed(1);
+      if (km <= SURCHARGE_KM) {
+        showBadge("nearby",
+          `${icons.check} <span><strong>${kmStr} km</strong> — within 10 km, standard rate applies / 在 10 公里范围内，正常收费 <strong>$50</strong></span>`);
+      } else {
+        showBadge("far",
+          `${icons.warning} <span><strong>${kmStr} km</strong> — over 10 km, <strong>+$10</strong> surcharge applies / 超出 10 公里，需加收 <strong>+$10</strong> 远程费用</span>`);
+      }
+    }
+
+    homeAddress.addEventListener("keydown", e => {
+      if (acList.hidden) return;
+      if (e.key === "ArrowDown") { e.preventDefault(); setActive((acIndex + 1) % acItems.length); }
+      else if (e.key === "ArrowUp") { e.preventDefault(); setActive((acIndex - 1 + acItems.length) % acItems.length); }
+      else if (e.key === "Enter" && acIndex >= 0) { e.preventDefault(); chooseSuggestion(acIndex); }
+      else if (e.key === "Escape") { closeSuggestions(); }
+    });
+
     homeAddress.addEventListener("input", () => {
       clearTimeout(distanceTimer);
+      clearTimeout(acTimer);
       const val = homeAddress.value.trim();
       if (!val) {
         distanceBadge.className = "distance-badge";
         lastCheckedAddr = "";
+        selectedPlaceId = "";
+        closeSuggestions();
+        return;
+      }
+      if (acEnabled) {
+        if (homeAddress.value !== selectedText) {
+          selectedPlaceId = "";
+          distanceBadge.className = "distance-badge";
+        }
+        if (val.length >= 3 && val !== selectedText) {
+          acTimer = setTimeout(() => fetchSuggestions(val), 250);
+        } else {
+          closeSuggestions();
+        }
         return;
       }
       // 如果还在输入阶段，不要弹出刺眼的错误/加费提示
@@ -909,17 +1071,28 @@
       }
     });
 
-    homeAddress.addEventListener("change", () => {
+    function finalizeAddress() {
       clearTimeout(distanceTimer);
+      clearTimeout(acTimer);
       const val = homeAddress.value.trim();
-      if (val) checkDrivingDistance(val, true);
-    });
+      if (!val) return;
+      if (acEnabled) {
+        closeSuggestions();
+        if (selectedPlaceId) return;
+        if (lastSuggestionCount === 0) {
+          showBadge("unknown",
+            `${icons.help} <span>Address not recognized — please check street and number / 未识别到该门牌街道，请核对地址</span>`);
+        } else {
+          showBadge("unknown",
+            `${icons.help} <span>Please pick your address from the suggestions / 请从下拉建议中选择您的地址</span>`);
+        }
+        return;
+      }
+      checkDrivingDistance(val, true);
+    }
 
-    homeAddress.addEventListener("blur", () => {
-      clearTimeout(distanceTimer);
-      const val = homeAddress.value.trim();
-      if (val) checkDrivingDistance(val, true);
-    });
+    homeAddress.addEventListener("change", finalizeAddress);
+    homeAddress.addEventListener("blur", finalizeAddress);
 
     async function checkDrivingDistance(rawAddress, isFinal = false) {
       if (rawAddress === lastCheckedAddr && distanceBadge.classList.contains("visible")) return;
