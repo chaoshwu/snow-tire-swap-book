@@ -896,33 +896,50 @@
         lastCheckedAddr = "";
         return;
       }
-      if (val.length >= 8) {
-        distanceTimer = setTimeout(() => checkDrivingDistance(val), 700);
+      // 如果还在输入阶段，不要弹出刺眼的错误/加费提示
+      // 只有符合完整街道特征（有门牌号 + 至少两个英文单词，如 "363 laughlin"）且停顿超过 1200ms 才预查
+      const words = val.split(/\s+/).filter(Boolean);
+      const hasNumberAndStreet = /^\d+/.test(val) && words.length >= 2 && words[1].length >= 3;
+      if (hasNumberAndStreet) {
+        distanceTimer = setTimeout(() => checkDrivingDistance(val, false), 1200);
+      } else {
+        // 如果输入很短或还在打字，不显示未完成的误导提示
+        if (!distanceBadge.classList.contains("nearby")) {
+          distanceBadge.className = "distance-badge";
+        }
       }
     });
 
     homeAddress.addEventListener("change", () => {
       clearTimeout(distanceTimer);
       const val = homeAddress.value.trim();
-      if (val.length >= 5) checkDrivingDistance(val);
+      if (val.length >= 5) checkDrivingDistance(val, true);
     });
 
     homeAddress.addEventListener("blur", () => {
       clearTimeout(distanceTimer);
       const val = homeAddress.value.trim();
-      if (val.length >= 5) checkDrivingDistance(val);
+      if (val.length >= 5) checkDrivingDistance(val, true);
     });
 
-    async function checkDrivingDistance(rawAddress) {
+    async function checkDrivingDistance(rawAddress, isFinal = false) {
       if (rawAddress === lastCheckedAddr && distanceBadge.classList.contains("visible")) return;
       const apiKey = (window.MAPS_CONFIG || {}).apiKey;
       if (!apiKey || apiKey === "YOUR_GOOGLE_MAPS_API_KEY") return;
 
+      const words = rawAddress.split(/\s+/).filter(Boolean);
+      // 地址结构不完整（比如没有数字门牌号，或者只有一个残缺单词）
+      const seemsIncomplete = !(/^\d+/.test(rawAddress)) || words.length < 2 || words[words.length - 1].length < 3;
+      if (!isFinal && seemsIncomplete) {
+        return;
+      }
+
       lastCheckedAddr = rawAddress;
       showBadge("checking", `${icons.spin} Checking driving distance… / 正在计算驾车距离…`);
 
+      // 锁定搜索范围：优先拼接 Kanata，保证就近匹配，防止漂移到整个大渥太华郊区
       const dest = !/ottawa|kanata|nepean|stittsville|orleans|barrhaven|\bon\b|ontario/i.test(rawAddress)
-        ? `${rawAddress}, Ottawa, ON, Canada`
+        ? `${rawAddress}, Kanata, ON, Canada`
         : rawAddress;
 
       try {
@@ -941,14 +958,14 @@
         });
 
         if (!response.ok) {
-          showUnknown();
+          if (isFinal) showUnknown(); else distanceBadge.className = "distance-badge";
           return;
         }
 
         const data = await response.json();
         const route = data.routes && data.routes[0];
         if (!route || typeof route.distanceMeters !== "number") {
-          showUnknown();
+          if (isFinal) showUnknown(); else distanceBadge.className = "distance-badge";
           return;
         }
 
@@ -959,11 +976,16 @@
           showBadge("nearby",
             `${icons.check} <span><strong>${kmStr} km</strong> — within 10 km, standard rate applies / 在 10 公里范围内，正常收费 <strong>$50</strong></span>`);
         } else {
+          // 如果打字途中且地址还比较短，为了防止误解，不立刻吓唬用户加收远程费
+          if (!isFinal && words.length < 3) {
+            distanceBadge.className = "distance-badge";
+            return;
+          }
           showBadge("far",
             `${icons.warning} <span><strong>${kmStr} km</strong> — over 10 km, <strong>+$10</strong> surcharge applies / 超出 10 公里，需加收 <strong>+$10</strong> 远程费用</span>`);
         }
       } catch (err) {
-        showUnknown();
+        if (isFinal) showUnknown(); else distanceBadge.className = "distance-badge";
       }
     }
 
