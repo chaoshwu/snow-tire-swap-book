@@ -874,7 +874,7 @@
     const SURCHARGE_KM   = 10;
     const distanceBadge  = document.querySelector("#distance-badge");
     let distanceTimer    = null;
-    let mapsService      = null;
+    let lastCheckedAddr  = "";
 
     function showBadge(state, html) {
       distanceBadge.className = `distance-badge visible ${state}`;
@@ -888,60 +888,89 @@
       help:    `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12" y2="17.01"/></svg>`,
     };
 
-    function initDistanceService() {
+    homeAddress.addEventListener("input", () => {
+      clearTimeout(distanceTimer);
+      const val = homeAddress.value.trim();
+      if (!val) {
+        distanceBadge.className = "distance-badge";
+        lastCheckedAddr = "";
+        return;
+      }
+      if (val.length >= 8) {
+        distanceTimer = setTimeout(() => checkDrivingDistance(val), 700);
+      }
+    });
+
+    homeAddress.addEventListener("change", () => {
+      clearTimeout(distanceTimer);
+      const val = homeAddress.value.trim();
+      if (val.length >= 5) checkDrivingDistance(val);
+    });
+
+    homeAddress.addEventListener("blur", () => {
+      clearTimeout(distanceTimer);
+      const val = homeAddress.value.trim();
+      if (val.length >= 5) checkDrivingDistance(val);
+    });
+
+    async function checkDrivingDistance(rawAddress) {
+      if (rawAddress === lastCheckedAddr && distanceBadge.classList.contains("visible")) return;
       const apiKey = (window.MAPS_CONFIG || {}).apiKey;
       if (!apiKey || apiKey === "YOUR_GOOGLE_MAPS_API_KEY") return;
-      const script = document.createElement("script");
-      script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&callback=_mapsReady`;
-      script.async = true;
-      document.head.appendChild(script);
-    }
 
-    window._mapsReady = function () {
-      mapsService = new google.maps.DistanceMatrixService();
-      homeAddress.addEventListener("blur", onAddressBlur);
-      homeAddress.addEventListener("input", () => {
-        clearTimeout(distanceTimer);
-        distanceBadge.className = "distance-badge";
-      });
-    };
+      lastCheckedAddr = rawAddress;
+      showBadge("checking", `${icons.spin} Checking driving distance… / 正在计算驾车距离…`);
 
-    function onAddressBlur() {
-      const addr = homeAddress.value.trim();
-      if (addr.length < 6) { distanceBadge.className = "distance-badge"; return; }
-      clearTimeout(distanceTimer);
-      distanceTimer = setTimeout(() => checkDrivingDistance(addr), 300);
-    }
+      const dest = !/ottawa|kanata|nepean|stittsville|orleans|barrhaven|\bon\b|ontario/i.test(rawAddress)
+        ? `${rawAddress}, Ottawa, ON, Canada`
+        : rawAddress;
 
-    async function checkDrivingDistance(destination) {
-      showBadge("checking", `${icons.spin} Checking distance… / 正在计算距离…`);
-      mapsService.getDistanceMatrix(
-        { origins: [SERVICE_ORIGIN], destinations: [destination],
-          travelMode: google.maps.TravelMode.DRIVING,
-          region: "ca", unitSystem: google.maps.UnitSystem.METRIC },
-        (res, status) => {
-          if (status !== "OK") { showUnknown(); return; }
-          const el = res.rows[0].elements[0];
-          if (el.status !== "OK") { showUnknown(); return; }
-          const km = el.distance.value / 1000;
-          const kmStr = km.toFixed(1);
-          if (km <= SURCHARGE_KM) {
-            showBadge("nearby",
-              `${icons.check} <span><strong>${kmStr} km</strong> — within 10 km, standard rate applies / 在 10 公里范围内，正常收费 <strong>$50</strong></span>`);
-          } else {
-            showBadge("far",
-              `${icons.warning} <span><strong>${kmStr} km</strong> — over 10 km, <strong>+$10</strong> surcharge applies / 超出 10 公里，需加收 <strong>+$10</strong> 远程费用</span>`);
-          }
+      try {
+        const response = await fetch("https://routes.googleapis.com/directions/v2:computeRoutes", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-Goog-Api-Key": apiKey,
+            "X-Goog-FieldMask": "routes.distanceMeters"
+          },
+          body: JSON.stringify({
+            origin: { address: SERVICE_ORIGIN },
+            destination: { address: dest },
+            travelMode: "DRIVE"
+          })
+        });
+
+        if (!response.ok) {
+          showUnknown();
+          return;
         }
-      );
+
+        const data = await response.json();
+        const route = data.routes && data.routes[0];
+        if (!route || typeof route.distanceMeters !== "number") {
+          showUnknown();
+          return;
+        }
+
+        const km = route.distanceMeters / 1000;
+        const kmStr = km.toFixed(1);
+
+        if (km <= SURCHARGE_KM) {
+          showBadge("nearby",
+            `${icons.check} <span><strong>${kmStr} km</strong> — within 10 km, standard rate applies / 在 10 公里范围内，正常收费 <strong>$50</strong></span>`);
+        } else {
+          showBadge("far",
+            `${icons.warning} <span><strong>${kmStr} km</strong> — over 10 km, <strong>+$10</strong> surcharge applies / 超出 10 公里，需加收 <strong>+$10</strong> 远程费用</span>`);
+        }
+      } catch (err) {
+        showUnknown();
+      }
     }
 
     function showUnknown() {
       showBadge("unknown",
         `${icons.help} Address not recognized — distance will be confirmed after booking / 地址无法识别，预约后我们将确认距离`);
     }
-
-    initDistanceService();
     /* ── End distance check ──────────────────────────────────────── */
   </script>
 </body>
