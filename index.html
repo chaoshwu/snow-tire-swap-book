@@ -65,6 +65,8 @@
     .included li { position: relative; padding-left: 18px; font-size: 13px; line-height: 1.35; }
     .included li::before { content: "✓"; position: absolute; left: 0; color: var(--green); font-weight: 700; }
     .included li strong { font-weight: 600; color: var(--ink); }
+    .book-heading { margin: 0 0 12px; font-size: 18px; font-weight: 700; color: var(--ink); }
+    .book-heading .zh { margin-left: 8px; font-size: 12px; font-weight: 500; color: var(--muted); }
     .price-callout { display: grid; grid-template-columns: minmax(0, 1fr) auto; width: min(250px, 100%); align-items: center; column-gap: 16px; margin: 14px 0 0; padding: 9px 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); color: var(--green-dark); font-size: 13px; font-weight: 700; }
     .price-callout strong { color: var(--green-dark); font-size: 18px; line-height: 1; }
     .price-extra { grid-column: 2; grid-row: 2; align-self: center; transform: translateY(2px); display: block; color: var(--green); font-size: 13px; }
@@ -259,6 +261,8 @@
         </div>
       </div>
     </section>
+
+    <h2 class="book-heading">Book your appointment<span class="zh">开始预约</span></h2>
 
     <div class="booking-layout">
       <form id="booking-form" class="form-panel">
