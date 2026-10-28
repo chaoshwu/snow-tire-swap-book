@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
   <meta name="theme-color" content="#f6f5ef">
 <meta name="description" content="Book an on-rim seasonal tire swap in Kanata. We swap complete wheel and tire assemblies only; tire mounting is not provided. 在线预约 Kanata 带轮毂换胎服务。">
 <meta property="og:type" content="website">
@@ -196,7 +196,8 @@
       .side-content { padding: 16px 14px; }
       .side-title { font-size: 14px; }
       .hours-row { font-size: 11px; }
-      .field-grid { gap: 13px 9px; }
+      .field-grid { grid-template-columns: 1fr; gap: 13px 0; }
+      .field.full { grid-column: auto; }
       .vehicle-card .field-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 11px 9px; }
       .vehicle-card .field-model { grid-column: 1 / -1; }
       .weekday-grid, .date-grid { gap: 3px; }
@@ -208,8 +209,6 @@
       footer { width: calc(100% - 28px); }
     }
     @media (max-width: 390px) {
-      .field-grid { grid-template-columns: 1fr; }
-      .field.full { grid-column: auto; }
       .vehicle-card .field-grid { grid-template-columns: 1fr; }
       .vehicle-card .field-model { grid-column: auto; }
       .side-panel { grid-template-columns: 1fr; }
