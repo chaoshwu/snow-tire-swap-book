@@ -58,6 +58,13 @@
     .eyebrow { color: var(--green); font-size: 11px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase; }
     h1 { margin: 9px 0 0; font-size: clamp(24px, 3.2vw, 34px); line-height: 1.25; letter-spacing: -0.01em; }
     .intro-copy { max-width: 320px; margin: 0 0 4px; color: var(--muted); font-size: 14px; line-height: 1.7; }
+    .included { margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--line); color: var(--green-dark); }
+    .included-title { margin: 0 0 10px; font-size: 13px; font-weight: 700; letter-spacing: .02em; }
+    .included-title .zh, .included li .zh { display: block; color: var(--muted); font-size: 11px; font-weight: 500; }
+    .included ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 9px; }
+    .included li { position: relative; padding-left: 18px; font-size: 13px; line-height: 1.35; }
+    .included li::before { content: "✓"; position: absolute; left: 0; color: var(--green); font-weight: 700; }
+    .included li strong { font-weight: 600; color: var(--ink); }
     .price-callout { display: grid; grid-template-columns: minmax(0, 1fr) auto; width: min(250px, 100%); align-items: center; column-gap: 16px; margin: 14px 0 0; padding: 9px 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); color: var(--green-dark); font-size: 13px; font-weight: 700; }
     .price-callout strong { color: var(--green-dark); font-size: 18px; line-height: 1; }
     .price-extra { grid-column: 2; grid-row: 2; align-self: center; transform: translateY(2px); display: block; color: var(--green); font-size: 13px; }
@@ -383,6 +390,14 @@
               <div class="hours-row"><span>Mon–Tue<br>周一、周二</span><strong>Unavailable<br>暂停预约</strong></div>
               <div class="hours-row"><span>Wed–Fri<br>周三至周五</span><strong>5:00 PM</strong></div>
               <div class="hours-row"><span>Sat–Sun<br>周六、周日</span><strong>8:00 AM — 5:00 PM</strong></div>
+          </div>
+          <div class="included" aria-label="Every swap includes / 每次服务包含">
+            <h3 class="included-title">Every swap includes<span class="zh">每次服务包含</span></h3>
+            <ul>
+              <li><strong>Torque-spec lug nuts</strong><span class="zh">按规格扭矩锁紧螺母</span></li>
+              <li><strong>Tire pressure check &amp; inflation</strong><span class="zh">胎压检查与充气</span></li>
+              <li><strong>Hub cleaning &amp; anti-seize</strong><span class="zh">轮毂接触面除锈清洁并涂抗卡死剂</span></li>
+            </ul>
           </div>
         </div>
       </aside>
