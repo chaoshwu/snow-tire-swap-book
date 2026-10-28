@@ -1038,7 +1038,7 @@
       outOfRangeAddress = "";
       if (km <= SURCHARGE_KM) {
         showBadge("nearby",
-          `${icons.check} <span><strong>${kmStr} km</strong> — within 10 km, standard rate applies / 在 10 公里范围内，正常收费 <strong>$50</strong></span>`);
+          `${icons.check} <span>Within 10 km, standard rate applies / 在 10 公里范围内，正常收费 <strong>$50</strong></span>`);
       } else if (km <= 15) {
         showBadge("far",
           `${icons.warning} <span><strong>${kmStr} km</strong> — over 10 km, <strong>+$10</strong> surcharge applies / 超出 10 公里，需加收 <strong>+$10</strong> 远程费用</span>`);
