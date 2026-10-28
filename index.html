@@ -62,6 +62,11 @@
     .price-callout strong { color: var(--green-dark); font-size: 18px; line-height: 1; }
     .price-extra { grid-column: 2; grid-row: 2; align-self: center; transform: translateY(2px); display: block; color: var(--green); font-size: 13px; }
     .price-callout .zh { display: block; margin-top: 3px; color: var(--muted); font-size: 10px; font-weight: 500; }
+    .price-callout { width: min(300px, 100%); }
+    .price-tiers { grid-column: 1 / -1; list-style: none; margin: 10px 0 0; padding: 8px 0 0; border-top: 1px dashed var(--line); display: grid; gap: 4px; }
+    .price-tiers li { display: flex; justify-content: space-between; font-size: 12px; font-weight: 500; color: var(--muted); }
+    .price-tiers li span:last-child { color: var(--green-dark); font-weight: 700; }
+    .price-callout .tier-note { grid-column: 1 / -1; grid-row: auto; }
     .price-callout small { grid-column: 1; grid-row: 2; display: block; margin-top: 6px; color: var(--muted); font-size: 10px; font-weight: 500; line-height: 1.4; }
     .booking-layout { display: grid; grid-template-columns: minmax(0, 1fr) 310px; align-items: start; gap: 20px; }
     form { min-width: 0; }
@@ -238,8 +243,11 @@
         <div class="price-callout" aria-label="Seasonal tire swap price / 季节换胎价格">
           <span>Seasonal tire swap<span class="zh">季节换胎</span></span>
           <strong>$50</strong>
-          <small>Over 10 km from Kanata Lake<br>距 Kanata Lake 超过 10 公里</small>
-          <span class="price-extra">+$10</span>
+          <ul class="price-tiers" aria-label="Distance surcharge / 远程费用">
+            <li><span>10–15 km</span><span>+$10</span></li>
+            <li><span>15–20 km</span><span>+$20</span></li>
+          </ul>
+          <small class="tier-note">From Kanata Lake · max 20 km<br>以 Kanata Lake 为起点 · 最远 20 公里</small>
         </div>
         <div class="service-scope" role="note"><strong>On-rim tire swap only</strong><span class="zh">仅提供带轮毂换胎</span></div>
       </div>
@@ -793,6 +801,11 @@
         formError.classList.add("visible");
         return;
       }
+      if (outOfRangeAddress && outOfRangeAddress === homeAddress.value.trim()) {
+        formError.textContent = "This address is outside our maximum service radius (20 km). Please contact us directly. / 该地址超出最大服务半径（20 公里），请直接联系我们。";
+        formError.classList.add("visible");
+        return;
+      }
       if (!selectedDate || !selectedTime) {
         formError.textContent = "Select an available appointment date and time. / 请选择可预约日期和时间。";
         formError.classList.add("visible");
@@ -1016,14 +1029,26 @@
       }
     }
 
+    // 分级收费：≤10 km $50；10–15 km +$10；15–20 km +$20；>20 km 不可预约
+    const MAX_SERVICE_KM = 20;
+    let outOfRangeAddress = "";
+
     function showDistance(km) {
       const kmStr = km.toFixed(1);
+      outOfRangeAddress = "";
       if (km <= SURCHARGE_KM) {
         showBadge("nearby",
           `${icons.check} <span><strong>${kmStr} km</strong> — within 10 km, standard rate applies / 在 10 公里范围内，正常收费 <strong>$50</strong></span>`);
-      } else {
+      } else if (km <= 15) {
         showBadge("far",
           `${icons.warning} <span><strong>${kmStr} km</strong> — over 10 km, <strong>+$10</strong> surcharge applies / 超出 10 公里，需加收 <strong>+$10</strong> 远程费用</span>`);
+      } else if (km <= MAX_SERVICE_KM) {
+        showBadge("far",
+          `${icons.warning} <span><strong>${kmStr} km</strong> — over 15 km, <strong>+$20</strong> surcharge applies / 超出 15 公里，需加收 <strong>+$20</strong> 远程费用</span>`);
+      } else {
+        outOfRangeAddress = homeAddress.value.trim();
+        showBadge("far",
+          `${icons.warning} <span><strong>${kmStr} km</strong> — outside our maximum service radius (20 km). Please contact us directly for special arrangements. / 超出最大服务半径（20 公里），请直接联系我们沟通。</span>`);
       }
     }
 
@@ -1166,20 +1191,12 @@
         }
 
         const km = route.distanceMeters / 1000;
-        const kmStr = km.toFixed(1);
-
-        if (km <= SURCHARGE_KM) {
-          showBadge("nearby",
-            `${icons.check} <span><strong>${kmStr} km</strong> — within 10 km, standard rate applies / 在 10 公里范围内，正常收费 <strong>$50</strong></span>`);
-        } else {
-          // 如果打字途中且地址还比较短，为了防止误解，不立刻吓唬用户加收远程费
-          if (!isFinal && words.length < 3) {
-            distanceBadge.className = "distance-badge";
-            return;
-          }
-          showBadge("far",
-            `${icons.warning} <span><strong>${kmStr} km</strong> — over 10 km, <strong>+$10</strong> surcharge applies / 超出 10 公里，需加收 <strong>+$10</strong> 远程费用</span>`);
+        // 如果打字途中且地址还比较短，为了防止误解，不立刻吓唬用户加收远程费
+        if (km > SURCHARGE_KM && !isFinal && words.length < 3) {
+          distanceBadge.className = "distance-badge";
+          return;
         }
+        showDistance(km);
       } catch (err) {
         if (isFinal) showUnknown(); else distanceBadge.className = "distance-badge";
       }
