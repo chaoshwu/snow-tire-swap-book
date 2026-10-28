@@ -67,6 +67,7 @@
     .price-tiers li { display: flex; justify-content: space-between; font-size: 12px; font-weight: 500; color: var(--muted); }
     .price-tiers li span:last-child { color: var(--green-dark); font-weight: 700; }
     .price-callout .tier-note { grid-column: 1 / -1; grid-row: auto; }
+    .price-callout .scope-badge { display: inline-block; margin-top: 7px; padding: 3px 9px; border-radius: 999px; background: #fff1e6; color: #b2461f; border: 1px solid #f3c9ad; font-size: 11px; font-weight: 700; line-height: 1.4; }
     .price-callout small { grid-column: 1; grid-row: 2; display: block; margin-top: 6px; color: var(--muted); font-size: 10px; font-weight: 500; line-height: 1.4; }
     .booking-layout { display: grid; grid-template-columns: minmax(0, 1fr) 310px; align-items: start; gap: 20px; }
     form { min-width: 0; }
@@ -241,7 +242,7 @@
       <div>
         <h1 id="page-title">Tire change, on your time.<span class="zh zh-copy">把换胎时间，安排妥当。</span></h1>
         <div class="price-callout" aria-label="Seasonal tire swap price / 季节换胎价格">
-          <span>Seasonal tire swap<span class="zh">季节换胎</span></span>
+          <span>Seasonal tire swap<span class="zh">季节换胎</span><span class="scope-badge">On-rim only · 仅带轮毂</span></span>
           <strong>$50</strong>
           <ul class="price-tiers" aria-label="Distance surcharge / 远程费用">
             <li><span>10–15 km</span><span>+$10</span></li>
@@ -249,9 +250,7 @@
           </ul>
           <small class="tier-note">From Kanata Lake · max 20 km<br>以 Kanata Lake 为起点 · 最远 20 公里</small>
         </div>
-        <div class="service-scope" role="note"><strong>On-rim tire swap only</strong><span class="zh">仅提供带轮毂换胎</span></div>
       </div>
-      <p class="intro-copy bilingual-copy">Enter your vehicle and service address, then choose a time that works for you. Weekend appointments are available.<span class="zh zh-copy">填写车辆和服务地点，再挑一个方便的时间。周末时段也开放预约。</span></p>
     </section>
 
     <div class="booking-layout">
@@ -380,13 +379,11 @@
         </div>
         <div class="side-content">
           <h2 class="side-title">Appointment hours<span class="zh">可预约时间</span></h2>
-          <p class="side-subtitle">Choose a date and time that works for you<br>挑选适合你的日期与时段</p>
           <div class="hours-list">
               <div class="hours-row"><span>Mon–Tue<br>周一、周二</span><strong>Unavailable<br>暂停预约</strong></div>
               <div class="hours-row"><span>Wed–Fri<br>周三至周五</span><strong>5:00 PM</strong></div>
               <div class="hours-row"><span>Sat–Sun<br>周六、周日</span><strong>8:00 AM — 5:00 PM</strong></div>
           </div>
-          <div class="side-rule"></div>
         </div>
       </aside>
     </div>
