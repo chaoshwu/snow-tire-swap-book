@@ -167,8 +167,6 @@
     .submit-button:hover { background: #183c2c; }
     .submit-button:focus-visible { outline: 3px solid rgba(49, 107, 80, .3); outline-offset: 2px; }
     .submit-button:disabled { background: #cfd2cc; color: #555a51; cursor: not-allowed; }
-    .submit-complete { display: inline-flex; min-height: 46px; align-items: center; justify-content: center; gap: 12px; padding: 0 19px; border-radius: 4px; background: var(--soft-green); border: 1px solid #b8d0b7; color: var(--green-dark); font-size: 13px; font-weight: 700; }
-    .submit-complete small { display: block; color: var(--muted); font-size: 11px; font-weight: 500; line-height: 1.25; }
     .side-panel { overflow: hidden; }
     .side-image { position: relative; min-height: 204px; background: #25332b; }
     .side-image img { display: block; width: 100%; height: 204px; object-fit: cover; }
@@ -391,10 +389,6 @@
         <div class="submit-row" id="submit-row">
           <p class="submit-note">Your contact details and address are only used to arrange this appointment.<br>联系方式和地址仅用于安排本次预约。</p>
           <button class="submit-button" id="submit-button" type="submit">Book appointment / 确认预约 <span aria-hidden="true">→</span></button>
-          <div class="submit-complete" id="submit-complete" role="status" aria-live="polite" hidden>
-            <span>Booked / 已完成预约</span>
-            <small>No further action needed. / 无需重复提交。</small>
-          </div>
         </div>
       </form>
 
@@ -436,7 +430,6 @@
     const nextMonthButton = document.querySelector("#next-month");
     const confirmation = document.querySelector("#confirmation");
     const submitButton = document.querySelector("#submit-button");
-    const submitComplete = document.querySelector("#submit-complete");
     const formError = document.querySelector("#form-error");
     const homeAddress = document.querySelector("#home-address");
     const vehicleMakeSelect = document.querySelector("#vehicle-make");
@@ -911,7 +904,7 @@
       const trustEn = document.createElement("p");
       trustEn.textContent = "Booking received. We’ll text/email to reconfirm before your appointment.";
       const trustZh = document.createElement("p");
-      trustZh.textContent = "已收到预约。上门前将通过短信/邮件再次确认。";
+      trustZh.textContent = "已收到预约，上门前将通过短信/邮件再次确认。";
       const details = [
         ...(vehicleText.length <= 1
           ? [`车辆 / Vehicle: ${vehicleText[0]}`]
@@ -934,9 +927,7 @@
       bookingConfirmed = true;
       if (submitButton) {
         submitButton.disabled = true;
-        submitButton.hidden = true;
       }
-      if (submitComplete) submitComplete.hidden = false;
       await renderTimes(selectedDate);
     });
 
