@@ -189,6 +189,8 @@
     .confirmation.visible { display: block; }
     .confirmation h2 { margin: 0 0 7px; font-size: 15px; }
     .confirmation p { margin: 4px 0; color: #485148; font-size: 12px; line-height: 1.6; overflow-wrap: anywhere; }
+    .confirmation-callout { margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(32, 35, 31, .12); }
+    .confirmation-callout p { margin: 6px 0; color: var(--green-dark); font-weight: 700; }
     .confirmation .demo-note { margin-top: 10px; color: var(--muted); font-size: 11px; }
     .form-error { display: none; margin: 14px 0 0; color: #a33e28; font-size: 12px; }
     .form-error.visible { display: block; }
@@ -901,17 +903,19 @@
       confirmation.innerHTML = "";
       const heading = document.createElement("h2");
       heading.textContent = "✅ Booking confirmed / 预约已确认";
+      const callout = document.createElement("div");
+      callout.className = "confirmation-callout";
       const trustEn = document.createElement("p");
-      trustEn.textContent = "Booking received. We’ll text/email to reconfirm before your appointment.";
+      trustEn.innerHTML = "<strong>Note:</strong> Booking received. We’ll text/email to reconfirm before your appointment.";
       const trustZh = document.createElement("p");
-      trustZh.textContent = "已收到预约，上门前将通过短信/邮件再次确认。";
+      trustZh.innerHTML = "<strong>提示：</strong> 已收到预约，上门前将通过短信/邮件再次确认。";
       const details = [
         ...(vehicleText.length <= 1
-          ? [`车辆 / Vehicle: ${vehicleText[0]}`]
-          : vehicleText.map((text, index) => `车辆 ${index + 1} / Vehicle ${index + 1}: ${text}`)),
-        `地点 / Address: ${address}`,
-        `时间 / Time: ${dateTextEn} ${timeTextEn}`,
-        `联系人 / Contact: ${data.get("customerName")} · ${data.get("customerPhone")}${customerEmail ? ` · ${customerEmail}` : ""}`
+          ? [`Vehicle / 车辆: ${vehicleText[0]}`]
+          : vehicleText.map((text, index) => `Vehicle ${index + 1} / 车辆 ${index + 1}: ${text}`)),
+        `Address / 地点: ${address}`,
+        `Time / 时间: ${dateTextEn} ${timeTextEn}`,
+        `Contact / 联系人: ${data.get("customerName")} · ${data.get("customerPhone")}${customerEmail ? ` · ${customerEmail}` : ""}`
       ];
       confirmation.append(heading);
       details.forEach((text) => {
@@ -919,8 +923,9 @@
         line.textContent = text;
         confirmation.append(line);
       });
-      confirmation.append(trustEn);
-      confirmation.append(trustZh);
+      callout.append(trustEn);
+      callout.append(trustZh);
+      confirmation.append(callout);
       confirmation.classList.add("visible");
       confirmation.scrollIntoView({ behavior: "smooth", block: "nearest" });
       formError.classList.remove("visible");
