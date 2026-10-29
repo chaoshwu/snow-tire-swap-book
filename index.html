@@ -191,7 +191,6 @@
     .confirmation p { margin: 4px 0; color: #485148; font-size: 12px; line-height: 1.6; overflow-wrap: anywhere; }
     .confirmation-callout { margin-top: 12px; padding: 12px 12px; border: 1px solid rgba(33, 75, 56, .18); border-left: 4px solid var(--green); border-radius: 4px; background: rgba(49, 107, 80, .08); }
     .confirmation .confirmation-callout p { margin: 8px 0; color: var(--green-dark); font-weight: 800; }
-    .confirmation-callout .badge { display: inline-flex; align-items: center; height: 18px; padding: 0 8px; margin-right: 8px; border-radius: 999px; background: var(--lime); color: var(--green-dark); font-size: 10px; font-weight: 900; letter-spacing: .04em; vertical-align: middle; }
     .confirmation .demo-note { margin-top: 10px; color: var(--muted); font-size: 11px; }
     .form-error { display: none; margin: 14px 0 0; color: #a33e28; font-size: 12px; }
     .form-error.visible { display: block; }
@@ -907,9 +906,9 @@
       const callout = document.createElement("div");
       callout.className = "confirmation-callout";
       const trustEn = document.createElement("p");
-      trustEn.innerHTML = "<span class='badge'>NOTE</span>Booking received. We'll text/email to reconfirm before your appointment.";
+      trustEn.textContent = "Booking received. We'll text/email to reconfirm before your appointment.";
       const trustZh = document.createElement("p");
-      trustZh.innerHTML = "<span class='badge'>提示</span>已收到预约，上门前将通过短信/邮件再次确认。";
+      trustZh.textContent = "已收到预约，上门前将通过短信/邮件再次确认。";
       const details = [
         ...(vehicleText.length <= 1
           ? [`Vehicle / 车辆: ${vehicleText[0]}`]
