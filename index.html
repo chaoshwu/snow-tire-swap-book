@@ -274,8 +274,23 @@
 
     <div class="booking-layout">
       <form id="booking-form" class="form-panel">
+        <section aria-labelledby="location-heading">
+          <h2 class="section-heading" id="location-heading"><span class="section-number">01</span><span>Location &amp; distance<span class="zh">服务地址与距离</span></span></h2>
+          <input type="hidden" name="location" value="home">
+          <p class="address-hint bilingual-copy">Enter your address to estimate distance and pricing before booking.<span class="zh zh-copy">输入地址可先预估距离与费用。</span></p>
+          <div class="field address-field" id="home-address-field">
+            <div class="ac-wrap">
+              <input id="home-address" name="homeAddress" placeholder="Street address / 街道地址" autocomplete="off" role="combobox" aria-expanded="false" aria-controls="address-suggestions" aria-autocomplete="list" required>
+              <ul id="address-suggestions" class="ac-list" role="listbox" hidden></ul>
+            </div>
+            <div id="distance-badge" class="distance-badge" role="status" aria-live="polite"></div>
+          </div>
+        </section>
+
+        <div class="divider"></div>
+
         <section aria-labelledby="vehicle-heading">
-          <h2 class="section-heading" id="vehicle-heading"><span class="section-number">01</span><span>Vehicle<span class="zh">车辆信息</span></span></h2>
+          <h2 class="section-heading" id="vehicle-heading"><span class="section-number">02</span><span>Vehicle<span class="zh">车辆信息</span></span></h2>
           <div class="field" style="margin-bottom: 15px; max-width: 230px;">
             <label for="vehicle-count">Number of vehicles <span class="zh">车辆数量</span></label>
             <select id="vehicle-count" name="vehicleCount">
@@ -330,43 +345,8 @@
 
         <div class="divider"></div>
 
-        <section aria-labelledby="contact-heading">
-          <h2 class="section-heading" id="contact-heading"><span class="section-number">02</span><span>Contact details<span class="zh">联系方式</span></span></h2>
-          <div class="field-grid">
-            <div class="field">
-              <label for="customer-name">Full name <span class="zh">姓名</span></label>
-              <input id="customer-name" name="customerName" autocomplete="name" required>
-            </div>
-            <div class="field">
-              <label for="customer-phone">Phone <span class="zh">电话</span></label>
-              <input id="customer-phone" name="customerPhone" type="tel" autocomplete="tel" required>
-            </div>
-            <div class="field full">
-              <label for="customer-email">Email (optional) <span class="zh">电子邮箱（可选）</span></label>
-              <input id="customer-email" name="customerEmail" type="email" autocomplete="email">
-            </div>
-          </div>
-        </section>
-
-        <div class="divider"></div>
-
-        <section aria-labelledby="location-heading">
-          <h2 class="section-heading" id="location-heading"><span class="section-number">03</span><span>Service address<span class="zh">服务地点</span></span></h2>
-          <input type="hidden" name="location" value="home">
-          <p class="address-hint bilingual-copy">Enter the address for this appointment.<span class="zh zh-copy">请输入本次预约的服务地址。</span></p>
-          <div class="field address-field" id="home-address-field">
-            <div class="ac-wrap">
-              <input id="home-address" name="homeAddress" placeholder="Street address / 街道地址" autocomplete="off" role="combobox" aria-expanded="false" aria-controls="address-suggestions" aria-autocomplete="list" required>
-              <ul id="address-suggestions" class="ac-list" role="listbox" hidden></ul>
-            </div>
-            <div id="distance-badge" class="distance-badge" role="status" aria-live="polite"></div>
-          </div>
-        </section>
-
-        <div class="divider"></div>
-
         <section aria-labelledby="schedule-heading">
-          <h2 class="section-heading" id="schedule-heading"><span class="section-number">04</span><span>Appointment<span class="zh">预约时间</span></span></h2>
+          <h2 class="section-heading" id="schedule-heading"><span class="section-number">03</span><span>Date &amp; time<span class="zh">预约时间</span></span></h2>
           <p class="group-label">Choose a date <span class="zh">选择日期</span></p>
           <div class="calendar-toolbar">
             <button id="previous-month" type="button" aria-label="Previous month / 上个月">←</button>
@@ -383,6 +363,26 @@
           <div class="availability-label"><span class="availability-dot" aria-hidden="true"></span><span id="selected-date-label">Available times / 可预约时段</span></div>
           <div class="time-grid" id="time-grid" role="group" aria-label="Available times / 可预约时间"></div>
           <p class="section-note">Appointments through Dec 31 / 预约开放至12月31日</p>
+        </section>
+
+        <div class="divider"></div>
+
+        <section aria-labelledby="contact-heading">
+          <h2 class="section-heading" id="contact-heading"><span class="section-number">04</span><span>Contact details<span class="zh">联系方式</span></span></h2>
+          <div class="field-grid">
+            <div class="field">
+              <label for="customer-name">Full name <span class="zh">姓名</span></label>
+              <input id="customer-name" name="customerName" autocomplete="name" required>
+            </div>
+            <div class="field">
+              <label for="customer-phone">Phone <span class="zh">电话</span></label>
+              <input id="customer-phone" name="customerPhone" type="tel" autocomplete="tel" required>
+            </div>
+            <div class="field full">
+              <label for="customer-email">Email (optional) <span class="zh">电子邮箱（可选）</span></label>
+              <input id="customer-email" name="customerEmail" type="email" autocomplete="email">
+            </div>
+          </div>
         </section>
 
         <p class="form-error" id="form-error" role="alert"></p>
