@@ -87,7 +87,6 @@ Deno.serve(async (request: Request) => {
     `Customer: ${appointment.customer_name}`,
     `Phone: ${appointment.customer_phone}`,
     `Email: ${appointment.customer_email || "Not provided"}`,
-    `Booking ID: ${appointment.id}`,
   ];
 
   const emailResponse = await fetch("https://api.resend.com/emails", {
