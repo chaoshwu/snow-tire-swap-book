@@ -31,6 +31,17 @@ function jsonResponse(message: string, status: number): Response {
   });
 }
 
+function escapeHtml(value: string): string {
+  const escapedCharacters: Record<string, string> = {
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#39;",
+  };
+  return value.replace(/[&<>"']/g, (character) => escapedCharacters[character]);
+}
+
 Deno.serve(async (request: Request) => {
   if (request.method !== "POST") {
     return jsonResponse("Method not allowed.", 405);
@@ -63,6 +74,8 @@ Deno.serve(async (request: Request) => {
   }
 
   const time = appointment.appointment_time.slice(0, 5);
+  const customerPhone = appointment.customer_phone?.trim() || "Not provided";
+  const customerEmail = appointment.customer_email?.trim() || "Not provided";
   const vehicle = [
     appointment.vehicle_year,
     appointment.vehicle_make,
@@ -75,19 +88,38 @@ Deno.serve(async (request: Request) => {
     appointment.vehicle_2_model,
     appointment.vehicle_2_trim,
   ].filter(Boolean).join(" ");
-  const emailLines = [
-    "A new tire-change appointment was booked.",
-    "",
-    `Date: ${appointment.appointment_date}`,
-    `Time: ${time}`,
-    `Vehicle: ${vehicle}`,
-    ...(secondVehicle ? [`Vehicle 2: ${secondVehicle}`] : []),
-    `Service location: ${appointment.location_type}`,
-    `Address: ${appointment.service_address}`,
-    `Customer: ${appointment.customer_name}`,
-    `Phone: ${appointment.customer_phone}`,
-    `Email: ${appointment.customer_email || "Not provided"}`,
+  const emailDetails: Array<{ label: string; value: string }> = [
+    { label: "Date", value: appointment.appointment_date },
+    { label: "Time", value: time },
+    { label: "Vehicle", value: vehicle },
+    { label: "Service location", value: appointment.location_type },
+    { label: "Address", value: appointment.service_address },
+    { label: "Customer", value: appointment.customer_name },
+    { label: "Phone", value: customerPhone },
+    { label: "Email", value: customerEmail },
   ];
+  if (secondVehicle) emailDetails.splice(3, 0, { label: "Vehicle 2", value: secondVehicle });
+
+  const emailLines = [
+    "NEW TIRE-CHANGE APPOINTMENT",
+    "",
+    ...emailDetails.map(({ label, value }) => `${label}: ${value}`),
+  ];
+  const emailRows = emailDetails.map(({ label, value }) => `
+    <tr>
+      <th align="left" style="padding: 10px 12px; border-bottom: 1px solid #e8e8e3; color: #53604c; font-size: 13px; font-weight: 600; white-space: nowrap;">${escapeHtml(label)}</th>
+      <td style="padding: 10px 12px; border-bottom: 1px solid #e8e8e3; color: #252820; font-size: 14px;">${escapeHtml(value)}</td>
+    </tr>`).join("");
+  const emailHtml = `<!doctype html>
+<html>
+  <body style="margin: 0; padding: 24px; background: #f5f6f2; font-family: Arial, Helvetica, sans-serif; color: #252820;">
+    <div style="max-width: 640px; margin: 0 auto; padding: 24px; border: 1px solid #e8e8e3; border-radius: 12px; background: #ffffff;">
+      <h1 style="margin: 0 0 18px; color: #33432e; font-size: 20px;">New tire-change appointment</h1>
+      <table role="presentation" style="width: 100%; border-collapse: collapse;">${emailRows}
+      </table>
+    </div>
+  </body>
+</html>`;
 
   const emailResponse = await fetch("https://api.resend.com/emails", {
     method: "POST",
@@ -102,6 +134,7 @@ Deno.serve(async (request: Request) => {
       reply_to: appointment.customer_email || undefined,
       subject: `New tire appointment: ${appointment.appointment_date} ${time}`,
       text: emailLines.join("\n"),
+      html: emailHtml,
     }),
   });
 
