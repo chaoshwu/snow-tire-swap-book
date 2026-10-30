@@ -270,14 +270,14 @@
       </div>
     </section>
 
-    <h2 class="book-heading">Book your appointment<span class="zh">开始预约</span></h2>
+    <h2 class="book-heading">Start your booking<span class="zh">开始预约</span></h2>
 
     <div class="booking-layout">
       <form id="booking-form" class="form-panel">
         <section aria-labelledby="location-heading">
-          <h2 class="section-heading" id="location-heading"><span class="section-number">01</span><span>Location &amp; distance<span class="zh">服务地址与距离</span></span></h2>
+          <h2 class="section-heading" id="location-heading"><span class="section-number">01</span><span>Address &amp; distance<span class="zh">服务地址与距离</span></span></h2>
           <input type="hidden" name="location" value="home">
-          <p class="address-hint bilingual-copy">Enter your address to estimate distance and pricing before booking.<span class="zh zh-copy">输入地址可先预估距离与费用。</span></p>
+          <p class="address-hint bilingual-copy">Enter your address to estimate distance.<span class="zh zh-copy">输入地址可先预估距离。</span></p>
           <div class="field address-field" id="home-address-field">
             <div class="ac-wrap">
               <input id="home-address" name="homeAddress" placeholder="Street address / 街道地址" autocomplete="off" role="combobox" aria-expanded="false" aria-controls="address-suggestions" aria-autocomplete="list" required>
@@ -340,7 +340,7 @@
             <div class="field-grid"></div>
           </div>
           </div>
-          <p class="schedule-hint" id="vehicle-schedule-hint">One weekday 5:00 PM appointment can include two vehicles at the same address. / 工作日 5 点同一地址可预约两辆车。</p>
+          <p class="schedule-hint" id="vehicle-schedule-hint" hidden>One weekday 5:00 PM appointment can include two vehicles at the same address. / 工作日 5 点同一地址可预约两辆车。</p>
         </section>
 
         <div class="divider"></div>
@@ -655,6 +655,7 @@
       vehicleCard2.classList.toggle("visible", showingSecondVehicle);
       vehicleCard2.setAttribute("aria-hidden", String(!showingSecondVehicle));
       vehicleCard2.querySelectorAll("input, select").forEach((field) => { field.disabled = !showingSecondVehicle; });
+      vehicleScheduleHint.hidden = !showingSecondVehicle;
       vehicleScheduleHint.textContent = showingSecondVehicle
         ? "Weekend bookings use two consecutive time slots; weekday 5:00 PM uses one slot for both vehicles. / 周末需要连续两个时段；工作日 5 点两辆车共用一个时段。"
         : "One weekday 5:00 PM appointment can include two vehicles at the same address. / 工作日 5 点同一地址可预约两辆车。";
