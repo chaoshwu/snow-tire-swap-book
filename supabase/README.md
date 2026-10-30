@@ -51,6 +51,10 @@ Serve the workspace over `http://localhost` (not `file://`), then test booking t
 
 ## Current limits
 
+Weekend hours are 8:00 AM–5:00 PM, with a lunch break from 12:00–1:00 PM. Appointment starts are on the hour from 8:00–11:00 AM and 1:00–4:00 PM; the last appointment finishes at 5:00 PM. The eight available hourly slots bound the day's workload. A two-vehicle weekend appointment reserves two consecutive slots. Database uniqueness constraints prevent overlapping bookings, including simultaneous requests. Existing appointments are kept when these rules are installed, including an appointment already booked for a lunch time; new lunch-time bookings are rejected.
+
+The public booking page also limits each phone number or source IP address to four successful bookings in any rolling 24-hour window.
+
 ## Email notifications
 
 The `smooth-api` Edge Function at `supabase/functions/smooth-api/index.ts` sends a plain-text notification to the shop after a new appointment is inserted. It uses Resend; the API key and shop inbox stay in Supabase secrets, not in the website.

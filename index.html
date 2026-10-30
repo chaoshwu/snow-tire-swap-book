@@ -484,13 +484,17 @@
       return [0, 3, 4, 5, 6].includes(date.getDay());
     }
 
+    function getAvailableStartHours(date) {
+      const day = date.getDay();
+      return day === 0 || day === 6 ? [8, 9, 10, 11, 13, 14, 15, 16] : [17];
+    }
+
     function hasBookableTime(date, now) {
       if (date > today) return isBookableWeekday(date);
       if (date < today || !isBookableWeekday(date)) return false;
 
       const minimumBookableTime = new Date(now.getTime() + 60 * 60 * 1000);
-      const startHour = date.getDay() === 0 || date.getDay() === 6 ? 8 : 17;
-      return Array.from({ length: 19 - startHour }, (_, index) => startHour + index)
+      return getAvailableStartHours(date)
         .some((hour) => new Date(date.getFullYear(), date.getMonth(), date.getDate(), hour) >= minimumBookableTime);
     }
 
@@ -657,7 +661,7 @@
       vehicleCard2.querySelectorAll("input, select").forEach((field) => { field.disabled = !showingSecondVehicle; });
       vehicleScheduleHint.hidden = !showingSecondVehicle;
       vehicleScheduleHint.textContent = showingSecondVehicle
-        ? "Weekend bookings use two consecutive time slots; weekday 5:00 PM uses one slot for both vehicles. / 周末需要连续两个时段；工作日 5 点两辆车共用一个时段。"
+        ? "Weekend bookings use two consecutive available time slots; weekday 5:00 PM uses one slot for both vehicles. / 周末两辆车需要连续两个可选时段；工作日 5 点两辆车共用一个时段。"
         : "One weekday 5:00 PM appointment can include two vehicles at the same address. / 工作日 5 点同一地址可预约两辆车。";
       if (selectedDate) renderTimes(selectedDate);
     });
@@ -749,7 +753,6 @@
     async function renderTimes(date) {
       timeGrid.replaceChildren();
       const day = date.getDay();
-      const startHour = day === 0 || day === 6 ? 8 : 17;
       const serviceNow = getServiceNow();
       const minimumBookableTime = new Date(serviceNow.getTime() + 60 * 60 * 1000);
       const isToday = formatDate(date) === formatDate(serviceNow);
@@ -771,18 +774,19 @@
         }
       }
 
-      const endHour = 17;
-      for (let hour = startHour; hour <= endHour; hour += 1) {
+      const isWeekend = day === 0 || day === 6;
+      const displayHours = isWeekend ? [8, 9, 10, 11, 13, 14, 15, 16] : [17];
+      selectedDateLabel.textContent = `${monthNames[date.getMonth()]} ${date.getDate()} · ${weekdayNames[date.getDay()]}`;
+      for (const hour of displayHours) {
         const button = document.createElement("button");
         const suffix = hour >= 12 ? "PM" : "AM";
         const displayHour = hour % 12 || 12;
         const timeValue = `${String(hour).padStart(2, "0")}:00`;
         const slotTime = new Date(date.getFullYear(), date.getMonth(), date.getDate(), hour);
         const isPastLeadTime = isToday && slotTime < minimumBookableTime;
-        const isWeekend = day === 0 || day === 6;
         const nextTimeValue = `${String(hour + 1).padStart(2, "0")}:00`;
         const needsNextSlot = vehicleCount === 2 && isWeekend;
-        const nextSlotUnavailable = needsNextSlot && (hour === endHour || bookedSlots.has(nextTimeValue));
+        const nextSlotUnavailable = needsNextSlot && (hour === 11 || hour === 16 || bookedSlots.has(nextTimeValue));
         button.type = "button";
         button.className = "time-button";
         button.innerHTML = `${displayHour}:00 ${suffix}<span class="zh">${suffix === "AM" ? "上午" : "下午"} ${displayHour}:00</span>`;
@@ -791,8 +795,7 @@
           button.disabled = true;
         } else if (bookedSlots.has(timeValue)) {
           button.disabled = true;
-          button.innerHTML = `${displayHour}:00 ${suffix}<span class="zh">Booked / 已预约</span>`;
-          button.setAttribute("aria-label", `${displayHour}:00 ${suffix}, booked / 已预约`);
+          button.setAttribute("aria-label", `${displayHour}:00 ${suffix}, unavailable / 不可预约`);
         } else if (isPastLeadTime) {
           button.disabled = true;
           button.innerHTML = `${displayHour}:00 ${suffix}<span class="zh">Unavailable / 不可预约</span>`;

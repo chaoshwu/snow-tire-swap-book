@@ -153,7 +153,10 @@ begin
     or p_appointment_date > make_date(extract(year from local_today)::integer, 12, 31)
     or not (
       (appointment_weekday between 3 and 5 and p_appointment_time = time '17:00')
-      or (appointment_weekday in (6, 7) and p_appointment_time >= time '08:00' and p_appointment_time <= time '17:00')
+      or (appointment_weekday in (6, 7) and (
+        p_appointment_time between time '08:00' and time '11:00'
+        or p_appointment_time between time '13:00' and time '16:00'
+      ))
     )
     or extract(minute from p_appointment_time) <> 0
     or extract(second from p_appointment_time) <> 0
@@ -277,7 +280,10 @@ begin
     or p_appointment_date < local_today
     or p_appointment_date > make_date(extract(year from local_today)::integer, 12, 31)
     or not ((appointment_weekday between 3 and 5 and p_appointment_time = time '17:00')
-      or (appointment_weekday in (6, 7) and p_appointment_time between time '08:00' and time '17:00'))
+      or (appointment_weekday in (6, 7) and (
+        p_appointment_time between time '08:00' and time '11:00'
+        or p_appointment_time between time '13:00' and time '16:00'
+      )))
     or extract(minute from p_appointment_time) <> 0
     or extract(second from p_appointment_time) <> 0
     or (p_appointment_date + p_appointment_time) < (local_now + interval '1 hour') then
@@ -287,7 +293,11 @@ begin
   if has_second_vehicle and (
     p_vehicle_2_make is null or p_vehicle_2_model is null or p_vehicle_2_time is null
     or (appointment_weekday between 3 and 5 and p_vehicle_2_time <> p_appointment_time)
-    or (appointment_weekday in (6, 7) and p_vehicle_2_time <> p_appointment_time + interval '1 hour')
+    or (appointment_weekday in (6, 7) and (
+      p_vehicle_2_time <> p_appointment_time + interval '1 hour'
+      or p_vehicle_2_time = time '12:00'
+      or p_vehicle_2_time > time '16:00'
+    ))
   ) then
     raise exception 'Two vehicles require the same weekday slot or two consecutive weekend slots.' using errcode = '22023';
   end if;
