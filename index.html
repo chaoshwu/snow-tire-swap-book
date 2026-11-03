@@ -335,7 +335,7 @@
             <div class="field-grid"></div>
           </div>
           </div>
-          <p class="schedule-hint" id="vehicle-schedule-hint" hidden>One weekday 5:00 PM appointment can include two vehicles at the same address. / 工作日 5 点同一地址可预约两辆车。</p>
+          <p class="schedule-hint" id="vehicle-schedule-hint" hidden>Weekend appointments for two vehicles require two consecutive available time slots. / 周末两辆车需要预约连续两个可选时段。</p>
         </section>
 
         <div class="divider"></div>
@@ -357,7 +357,7 @@
           <div class="date-grid" id="date-grid" role="group" aria-label="Available dates / 可预约日期"></div>
           <div class="availability-label"><span class="availability-dot" aria-hidden="true"></span><span id="selected-date-label">Available times / 可预约时段</span></div>
           <div class="time-grid" id="time-grid" role="group" aria-label="Available times / 可预约时间"></div>
-          <p class="section-note">Appointments through Dec 31 / 预约开放至12月31日</p>
+          <p class="section-note">Weekday appointments are paused; weekends only. / 工作日预约暂停，目前仅开放周末预约。<br>Appointments through Dec 31 / 预约开放至12月31日</p>
         </section>
 
         <div class="divider"></div>
@@ -397,8 +397,7 @@
         <div class="side-content">
           <h2 class="side-title">Appointment hours<span class="zh">可预约时间</span></h2>
           <div class="hours-list">
-              <div class="hours-row"><span>Mon–Tue<br>周一、周二</span><strong>Unavailable<br>暂停预约</strong></div>
-              <div class="hours-row"><span>Wed–Fri<br>周三至周五</span><strong>5:00 PM</strong></div>
+              <div class="hours-row"><span>Mon–Fri<br>周一至周五</span><strong>Paused<br>暂停预约</strong></div>
               <div class="hours-row"><span>Sat–Sun<br>周六、周日</span><strong>8:00 AM — 5:00 PM</strong></div>
           </div>
           <div class="included" aria-label="Included / 服务包含">
@@ -655,9 +654,7 @@
       vehicleCard2.setAttribute("aria-hidden", String(!showingSecondVehicle));
       vehicleCard2.querySelectorAll("input, select").forEach((field) => { field.disabled = !showingSecondVehicle; });
       vehicleScheduleHint.hidden = !showingSecondVehicle;
-      vehicleScheduleHint.textContent = showingSecondVehicle
-        ? "Weekend bookings use two consecutive available time slots; weekday 5:00 PM uses one slot for both vehicles. / 周末两辆车需要连续两个可选时段；工作日 5 点两辆车共用一个时段。"
-        : "One weekday 5:00 PM appointment can include two vehicles at the same address. / 工作日 5 点同一地址可预约两辆车。";
+      vehicleScheduleHint.textContent = "Weekend appointments for two vehicles require two consecutive available time slots. / 周末两辆车需要预约连续两个可选时段。";
       if (selectedDate) renderTimes(selectedDate);
     });
     vehicleCard2.querySelectorAll("input, select").forEach((field) => { field.disabled = true; });
@@ -674,6 +671,10 @@
 
     function formatDate(date) {
       return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+    }
+
+    function isBookableDay(date) {
+      return date.getDay() === 0 || date.getDay() === 6;
     }
 
     function renderDates() {
@@ -697,14 +698,14 @@
       for (let dayOfMonth = 1; dayOfMonth <= daysInMonth; dayOfMonth += 1) {
         const date = new Date(visibleMonth.getFullYear(), visibleMonth.getMonth(), dayOfMonth);
         const weekday = date.getDay();
-        const isBookableDay = [0, 3, 4, 5, 6].includes(weekday);
+        const isAvailableWeekday = isBookableDay(date);
         const isWithinBookingWindow = date >= firstBookableDate && date <= lastBookableDate;
         const button = document.createElement("button");
         button.type = "button";
         button.className = "date-button";
         button.dataset.date = formatDate(date);
         button.setAttribute("aria-pressed", String(Boolean(selectedDate && formatDate(selectedDate) === button.dataset.date)));
-        button.disabled = !isBookableDay || !isWithinBookingWindow;
+        button.disabled = !isAvailableWeekday || !isWithinBookingWindow;
         button.innerHTML = `<span class="date">${dayOfMonth}</span>`;
         button.setAttribute("aria-label", `${new Intl.DateTimeFormat("en-US", { weekday: "long", month: "long", day: "numeric" }).format(date)} / ${weekdayNames[weekday]}${button.disabled ? ", unavailable" : ", available"}`);
         button.addEventListener("click", () => selectDate(date, button));
@@ -837,6 +838,11 @@
       }
       if (!selectedDate || !selectedTime) {
         formError.textContent = "Select an available appointment date and time. / 请选择可预约日期和时间。";
+        formError.classList.add("visible");
+        return;
+      }
+      if (!isBookableDay(selectedDate)) {
+        formError.textContent = "Weekday appointments are temporarily paused. Please choose a Saturday or Sunday. / 周一至周五暂时暂停预约，请选择周六或周日。";
         formError.classList.add("visible");
         return;
       }
