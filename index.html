@@ -4,21 +4,21 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
   <meta name="theme-color" content="#f6f5ef">
-<meta name="description" content="Book an on-rim seasonal tire swap in Kanata. We swap complete wheel and tire assemblies only; tire mounting is not provided. 在线预约 Kanata 带轮毂换胎服务。">
+<meta name="description" content="Book tire swaps and oil changes in Kanata. Tire swaps are for complete wheel and tire assemblies only; tire mounting is not provided. 在线预约 Kanata 换胎和换机油服务。">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://kanata-tire.pages.dev/">
-<meta property="og:title" content="Kanata Tire — Tire Booking">
-<meta property="og:description" content="Book an on-rim seasonal tire swap in Kanata. Complete wheel and tire assemblies only. 仅提供带轮毂换胎。">
+<meta property="og:title" content="Kanata Tire & Oil — Service Booking">
+<meta property="og:description" content="Book tire swaps and oil changes in Kanata. Tire swaps require complete wheel and tire assemblies. 在线预约 Kanata 换胎和换机油服务。">
 <meta property="og:image" content="https://images.unsplash.com/photo-1585252522525-4f9ad48a24ea?auto=format&fit=crop&w=1200&h=630&q=85">
 <meta property="og:image:alt" content="Close-up of a car tire tread">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Kanata Tire — Tire Booking">
-  <meta name="twitter:description" content="Book an on-rim seasonal tire swap in Kanata. Complete wheel and tire assemblies only. 仅提供带轮毂换胎。">
+<meta name="twitter:title" content="Kanata Tire & Oil — Service Booking">
+  <meta name="twitter:description" content="Book tire swaps and oil changes in Kanata. Tire swaps require complete wheel and tire assemblies. 在线预约 Kanata 换胎和换机油服务。">
   <meta name="twitter:image" content="https://images.unsplash.com/photo-1585252522525-4f9ad48a24ea?auto=format&fit=crop&w=1200&h=630&q=85">
   <!-- Cloudflare Web Analytics -->
   <script type="module" src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token": "8a792e2d244d44fca109bd6cb782c346"}'></script>
   <!-- End Cloudflare Web Analytics -->
-  <title>Kanata Tire — Tire Booking</title>
+  <title>Kanata Tire &amp; Oil — Service Booking</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -64,6 +64,7 @@
     .included { margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--line); color: var(--green-dark); }
     .included-title { margin: 0 0 10px; font-size: 13px; font-weight: 700; letter-spacing: .02em; }
     .included-title .zh, .included li .zh { display: block; color: var(--muted); font-size: 11px; font-weight: 500; }
+    .included [hidden] { display: none !important; }
     .included ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 9px; }
     .included li { position: relative; padding-left: 18px; font-size: 13px; line-height: 1.35; }
     .included li::before { content: "✓"; position: absolute; left: 0; color: var(--green); font-weight: 700; }
@@ -75,6 +76,8 @@
     .price-extra { grid-column: 2; grid-row: 2; align-self: center; transform: translateY(2px); display: block; color: var(--green); font-size: 13px; }
     .price-callout .zh { display: block; margin-top: 3px; color: var(--muted); font-size: 10px; font-weight: 500; }
     .price-callout { width: min(300px, 100%); }
+    .service-prices { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; width: min(620px, 100%); }
+    .service-prices .price-callout { width: 100%; }
     .price-tiers { grid-column: 1 / -1; list-style: none; margin: 10px 0 0; padding: 8px 0 0; border-top: 1px dashed var(--line); display: grid; gap: 4px; }
     .price-tiers li { display: flex; justify-content: space-between; font-size: 12px; font-weight: 500; color: var(--muted); }
     .price-tiers li span:last-child { color: var(--green-dark); font-weight: 700; }
@@ -101,6 +104,10 @@
     .field[hidden] { display: none !important; }
     .field.full { grid-column: 1 / -1; }
     label, .group-label { color: #42463f; font-size: 12px; font-weight: 700; }
+    .field-trim label.visually-hidden {
+      position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden;
+      clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
+    }
     .en { color: var(--muted); font-size: 10px; font-weight: 500; }
     .field label .en { margin-left: 5px; }
     .bilingual-copy .en { display: block; margin-top: 4px; line-height: 1.55; }
@@ -118,6 +125,18 @@
     input:focus, select:focus { border-color: var(--green); box-shadow: 0 0 0 3px rgba(49, 107, 80, .12); }
     .divider { height: 1px; margin: 25px 0 22px; background: var(--line); }
     .address-choice { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin: 10px 0 15px; }
+    .service-choice { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin: 10px 0 0; }
+    .service-choice label { min-height: 66px; align-items: flex-start; }
+    .service-choice .choice-text { line-height: 1.4; }
+    .oil-options { margin-top: 16px; padding: 14px; border: 1px solid var(--line); border-radius: 5px; background: #fbfbf7; }
+    .oil-options[hidden] { display: none; }
+    .oil-options-title { margin: 0 0 4px; font-size: 13px; }
+    .oil-options-note { margin: 0 0 10px; color: var(--muted); font-size: 11px; line-height: 1.5; }
+    .oil-options .choice { margin-top: 8px; }
+    .oil-options .choice label { justify-content: flex-start; }
+    .oil-options .choice label .oil-option-price { margin-left: auto; }
+    .oil-option-price { color: var(--green-dark); font-size: 12px; font-weight: 700; white-space: nowrap; }
+    .oil-vin { max-width: 320px; margin: 0 0 14px; }
     .choice { position: relative; }
     .choice input { position: absolute; width: 1px; height: 1px; opacity: 0; }
     .choice label {
@@ -222,6 +241,8 @@
       .topbar-note { max-width: 130px; text-align: right; font-size: 11px; }
       main { width: calc(100% - 28px); margin: 23px auto 42px; }
       .intro { align-items: flex-start; flex-direction: column; gap: 8px; margin-bottom: 18px; }
+      .service-prices { grid-template-columns: 1fr; gap: 0; }
+      .service-choice { grid-template-columns: 1fr; }
       h1 { font-size: clamp(20px, 5.6vw, 24px); }
       .intro-copy { max-width: 100%; font-size: 13px; }
       .booking-layout { grid-template-columns: 1fr; }
@@ -257,10 +278,16 @@
   <main>
     <section class="intro" aria-labelledby="page-title">
       <div>
-        <h1 id="page-title">Tire change, on your time.<span class="zh zh-copy">把换胎时间，安排妥当。</span></h1>
-        <div class="price-callout" aria-label="Seasonal tire swap price / 季节换胎价格">
-          <span>Seasonal tire swap<span class="zh">季节换胎</span><span class="scope-badge">On-rim only · 仅带轮毂</span></span>
-          <strong>$50</strong>
+        <h1 id="page-title">Tire &amp; oil changes, on your time.<span class="zh zh-copy">换胎、换机油，按你的时间安排。</span></h1>
+        <div class="service-prices" aria-label="Service prices / 服务价格">
+          <div class="price-callout" aria-label="Tire swap on-rim only price / 仅带轮毂换胎价格">
+            <span>Tire swap · On-rim only<span class="zh">换胎 · 仅带轮毂</span></span>
+            <strong>$50</strong>
+          </div>
+          <div class="price-callout" aria-label="Oil change labor price / 换机油人工费">
+            <span>Oil change · labour<span class="zh">换机油 · 人工费</span></span>
+            <strong>$50</strong>
+          </div>
         </div>
       </div>
     </section>
@@ -284,9 +311,25 @@
 
         <div class="divider"></div>
 
+        <section aria-labelledby="service-heading">
+          <h2 class="section-heading" id="service-heading"><span class="section-number">02</span><span>Choose a service<span class="zh">选择服务</span></span></h2>
+          <div class="service-choice" role="radiogroup" aria-label="Choose one service / 选择一项服务">
+            <div class="choice">
+              <input id="service-tire" name="serviceType" type="radio" value="tire" checked required>
+              <label for="service-tire"><span class="choice-text">Seasonal tire swap<span class="zh">季节换胎</span></span></label>
+            </div>
+            <div class="choice">
+              <input id="service-oil" name="serviceType" type="radio" value="oil" required>
+              <label for="service-oil"><span class="choice-text">Oil change<span class="zh">换机油</span></span></label>
+            </div>
+          </div>
+        </section>
+
+        <div class="divider"></div>
+
         <section aria-labelledby="vehicle-heading">
-          <h2 class="section-heading" id="vehicle-heading"><span class="section-number">02</span><span>Vehicle<span class="zh">车辆信息</span></span></h2>
-          <div class="field" style="margin-bottom: 15px; max-width: 230px;">
+          <h2 class="section-heading" id="vehicle-heading"><span class="section-number">03</span><span>Vehicle<span class="zh">车辆信息</span></span></h2>
+          <div class="field" id="vehicle-count-field" style="margin-bottom: 15px; max-width: 230px;">
             <label for="vehicle-count">Number of vehicles <span class="zh">车辆数量</span></label>
             <select id="vehicle-count" name="vehicleCount">
               <option value="1">1 vehicle / 1 辆车</option>
@@ -326,6 +369,7 @@
               </div>
             </div>
             <div class="field field-trim">
+              <label for="vehicle-trim"><span id="vehicle-trim-label-en">Trim</span></label>
               <input id="vehicle-trim" name="trim" placeholder="Trim / 配置" autocomplete="off" aria-label="Trim / 配置">
             </div>
           </div>
@@ -335,13 +379,29 @@
             <div class="field-grid"></div>
           </div>
           </div>
+          <div class="oil-options" id="oil-options" hidden>
+            <h3 class="oil-options-title">Oil change details<span class="zh">换机油信息</span></h3>
+            <div class="field oil-vin">
+              <label for="oil-vin">VIN (recommended) <span class="zh">VIN码（建议填写）</span></label>
+              <input id="oil-vin" name="oilVin" type="text" maxlength="17" pattern="[A-HJ-NPR-Z0-9]{17}" title="Enter a 17-character VIN / 请输入17位VIN码" autocapitalize="characters" spellcheck="false" placeholder="17-character VIN / 17位VIN码" disabled>
+            </div>
+            <p class="oil-options-note" style="margin-top: 14px;">Choose who will prepare the materials. / 请选择材料准备方式。</p>
+            <div class="choice">
+              <input id="materials-customer" name="oilMaterials" type="radio" value="customer" disabled>
+              <label for="materials-customer"><span class="choice-text">I’ll provide the materials<span class="zh">我自备机油和滤芯</span></span></label>
+            </div>
+            <div class="choice">
+              <input id="materials-shop" name="oilMaterials" type="radio" value="shop" disabled>
+              <label for="materials-shop"><span class="choice-text">Have us buy the oil &amp; filter; parts cost extra<span class="zh">请帮我代买机油和滤芯（材料费另付）</span></span><span class="oil-option-price">+$20 service fee</span></label>
+            </div>
+          </div>
           <p class="schedule-hint" id="vehicle-schedule-hint" hidden>Weekend appointments for two vehicles require two consecutive available time slots. / 周末两辆车需要预约连续两个可选时段。</p>
         </section>
 
         <div class="divider"></div>
 
         <section aria-labelledby="schedule-heading">
-          <h2 class="section-heading" id="schedule-heading"><span class="section-number">03</span><span>Date &amp; time<span class="zh">预约时间</span></span></h2>
+          <h2 class="section-heading" id="schedule-heading"><span class="section-number">04</span><span>Date &amp; time<span class="zh">预约时间</span></span></h2>
           <p class="group-label">Choose a date <span class="zh">选择日期</span></p>
           <div class="calendar-toolbar">
             <button id="previous-month" type="button" aria-label="Previous month / 上个月">←</button>
@@ -357,13 +417,13 @@
           <div class="date-grid" id="date-grid" role="group" aria-label="Available dates / 可预约日期"></div>
           <div class="availability-label"><span class="availability-dot" aria-hidden="true"></span><span id="selected-date-label">Available times / 可预约时段</span></div>
           <div class="time-grid" id="time-grid" role="group" aria-label="Available times / 可预约时间"></div>
-          <p class="section-note">Weekday appointments are paused; weekends only. / 工作日预约暂停，目前仅开放周末预约。<br>Appointments through Dec 31 / 预约开放至12月31日</p>
+          <p class="section-note">Weekday appointments are paused; weekends only. / 工作日预约暂停，目前仅开放周末预约。<br>Both services use the same available appointment slots. / 两项服务使用相同的可预约时段。<br>Appointments through Dec 31 / 预约开放至12月31日</p>
         </section>
 
         <div class="divider"></div>
 
         <section aria-labelledby="contact-heading">
-          <h2 class="section-heading" id="contact-heading"><span class="section-number">04</span><span>Contact details<span class="zh">联系方式</span></span></h2>
+          <h2 class="section-heading" id="contact-heading"><span class="section-number">05</span><span>Contact details<span class="zh">联系方式</span></span></h2>
           <div class="field-grid">
             <div class="field">
               <label for="customer-name">Full name <span class="zh">姓名</span></label>
@@ -400,12 +460,19 @@
               <div class="hours-row"><span>Mon–Fri<br>周一至周五</span><strong>Paused<br>暂停预约</strong></div>
               <div class="hours-row"><span>Sat–Sun<br>周六、周日</span><strong>8:00 AM — 5:00 PM</strong></div>
           </div>
-          <div class="included" aria-label="Included / 服务包含">
-            <h3 class="included-title">Included<span class="zh">服务包含</span></h3>
-            <ul>
+          <div class="included" aria-label="Service details / 服务详情">
+            <h3 class="included-title" id="included-tire-title">Included<span class="zh">服务包含</span></h3>
+            <h3 class="included-title" id="included-oil-title" hidden>Oil change details<span class="zh">换机油服务说明</span></h3>
+            <ul id="included-tire-list">
               <li><strong>Torque-spec lug nuts</strong><span class="zh">按规格扭矩锁紧螺母</span></li>
               <li><strong>Tire pressure check &amp; inflation</strong><span class="zh">胎压检查与充气</span></li>
               <li><strong>Hub cleaning &amp; anti-seize</strong><span class="zh">轮毂接触面除锈清洁并涂抗卡死剂</span></li>
+            </ul>
+            <ul id="included-oil-list" hidden>
+              <li><strong>Oil &amp; filter replacement (labour only)</strong><span class="zh">更换机油及滤芯（仅人工）</span></li>
+              <li><strong>Oil &amp; filter costs are paid separately</strong><span class="zh">机油和滤芯材料费用另付</span></li>
+              <li><strong>Shop purchase: +$20 service fee; parts extra</strong><span class="zh">代买服务费+$20，材料费另付</span></li>
+              <li><strong>Used oil is collected for proper recycling</strong><span class="zh">旧机油将统一回收处理</span></li>
             </ul>
           </div>
         </div>
@@ -434,9 +501,22 @@
     const vehicleModelSelect = document.querySelector("#vehicle-model");
     const vehicleModelOtherField = document.querySelector("#vehicle-model-other-field");
     const vehicleModelOther = document.querySelector("#vehicle-model-other");
+    const vehicleTrimInput = document.querySelector("#vehicle-trim");
+    const vehicleTrimLabel = document.querySelector("label[for='vehicle-trim']");
+    const vehicleTrimLabelEn = document.querySelector("#vehicle-trim-label-en");
     const vehicleCard2 = document.querySelector("#vehicle-card-2");
     const vehicleCountSelect = document.querySelector("#vehicle-count");
+    const vehicleCountField = document.querySelector("#vehicle-count-field");
     const vehicleScheduleHint = document.querySelector("#vehicle-schedule-hint");
+    const oilOptions = document.querySelector("#oil-options");
+    const oilVinInput = document.querySelector("#oil-vin");
+    const includedTireTitle = document.querySelector("#included-tire-title");
+    const includedOilTitle = document.querySelector("#included-oil-title");
+    const includedTireList = document.querySelector("#included-tire-list");
+    const includedOilList = document.querySelector("#included-oil-list");
+    const oilMaterialsRadios = form.querySelectorAll('input[name="oilMaterials"]');
+    const tireServiceOption = document.querySelector("#service-tire");
+    const oilServiceOption = document.querySelector("#service-oil");
     const supabaseConfig = window.SUPABASE_CONFIG || {};
     const serviceTimeZone = "America/Toronto";
     const supabaseClient = window.supabase && supabaseConfig.url && supabaseConfig.anonKey
@@ -606,6 +686,12 @@
         element.name = names[element.name] || element.name;
         if (element.tagName === "INPUT" || element.tagName === "SELECT") element.value = "";
       });
+      const secondTrim = fieldGrid.querySelector("[name='trim2']");
+      const secondTrimLabel = fieldGrid.querySelector("label[for='vehicle-2-trim']");
+      secondTrim.placeholder = "Trim / 配置";
+      secondTrim.setAttribute("aria-label", "Trim");
+      secondTrimLabel.classList.add("visually-hidden");
+      secondTrimLabel.querySelector("#vehicle-2-trim-label-en").textContent = "Trim";
       vehicleCard2.querySelector(".field-grid").replaceWith(fieldGrid);
       const make = fieldGrid.querySelector("[name='makeChoice2']");
       const model = fieldGrid.querySelector("[name='modelChoice2']");
@@ -658,6 +744,40 @@
       if (selectedDate) renderTimes(selectedDate);
     });
     vehicleCard2.querySelectorAll("input, select").forEach((field) => { field.disabled = true; });
+
+    function updateServiceFields() {
+      const isOilChange = oilServiceOption.checked;
+      vehicleTrimLabel.classList.add("visually-hidden");
+      vehicleTrimInput.required = isOilChange;
+      vehicleTrimInput.placeholder = isOilChange ? "Trim / 配置（2.5L）" : "Trim / 配置";
+      vehicleTrimInput.setAttribute("aria-label", "Trim");
+      vehicleTrimLabelEn.textContent = "Trim";
+      vehicleCountField.hidden = isOilChange;
+      vehicleCountSelect.disabled = isOilChange;
+      oilOptions.hidden = !isOilChange;
+      includedTireTitle.hidden = isOilChange;
+      includedTireList.hidden = isOilChange;
+      includedOilTitle.hidden = !isOilChange;
+      includedOilList.hidden = !isOilChange;
+      oilMaterialsRadios.forEach((radio) => {
+        radio.disabled = !isOilChange;
+        radio.required = isOilChange;
+      });
+      oilVinInput.disabled = !isOilChange;
+      if (isOilChange) {
+        vehicleCountSelect.value = "1";
+        vehicleCount = 1;
+        vehicleCard2.classList.remove("visible");
+        vehicleCard2.setAttribute("aria-hidden", "true");
+        vehicleCard2.querySelectorAll("input, select").forEach((field) => { field.disabled = true; });
+        vehicleScheduleHint.hidden = true;
+      }
+      if (selectedDate) renderTimes(selectedDate);
+    }
+    [tireServiceOption, oilServiceOption].forEach((option) => option.addEventListener("change", updateServiceFields));
+    oilVinInput.addEventListener("input", () => { oilVinInput.value = oilVinInput.value.toUpperCase(); });
+    updateServiceFields();
+
     /* Keep the second vehicle hidden until the customer explicitly selects 2. */
     vehicleCountSelect.value = "1";
     vehicleCount = 1;
@@ -861,6 +981,9 @@
       }
       const vehicle1 = readVehicle();
       const vehicle2 = vehicleCount === 2 ? readVehicle("2") : null;
+      const serviceType = oilServiceOption.checked ? "oil" : "tire";
+      const oilVin = serviceType === "oil" ? String(data.get("oilVin") || "").trim().toUpperCase() : null;
+      const oilMaterials = serviceType === "oil" ? data.get("oilMaterials") : null;
       const isWeekend = selectedDate.getDay() === 0 || selectedDate.getDay() === 6;
       const secondTime = vehicleCount === 2 && isWeekend
         ? `${String(Number(selectedTime.slice(0, 2)) + 1).padStart(2, "0")}:00`
@@ -873,7 +996,7 @@
       const vehicleText = [vehicle1, vehicle2].filter(Boolean).map((vehicle) => [vehicle.year, vehicle.make, vehicle.model, vehicle.trim].filter(Boolean).join(" "));
       const customerEmail = String(data.get("customerEmail") || "").trim();
 
-      const { error } = await supabaseClient.rpc("create_appointment_v2", {
+      const { error } = await supabaseClient.rpc("create_appointment_v3", {
         p_appointment_date: formatDate(selectedDate),
         p_appointment_time: selectedTime,
         p_vehicle_year: vehicle1.year,
@@ -889,7 +1012,10 @@
         p_service_address: address,
         p_customer_name: data.get("customerName"),
         p_customer_email: data.get("customerEmail"),
-        p_customer_phone: data.get("customerPhone")
+        p_customer_phone: data.get("customerPhone"),
+        p_service_type: serviceType,
+        p_oil_vin: oilVin || null,
+        p_oil_materials: oilMaterials || null
       });
 
       if (error) {
@@ -915,9 +1041,15 @@
       const trustZh = document.createElement("p");
       trustZh.textContent = "已收到预约，上门前将通过短信/邮件再次确认。";
       const details = [
+        `Service / 服务: ${serviceType === "oil" ? "Oil change / 换机油" : "Tire swap · on-rim only / 换胎 · 仅带轮毂"}`,
         ...(vehicleText.length <= 1
           ? [`Vehicle / 车辆: ${vehicleText[0]}`]
           : vehicleText.map((text, index) => `Vehicle ${index + 1} / 车辆 ${index + 1}: ${text}`)),
+        ...(serviceType === "oil" ? [
+          ...(oilVin ? [`VIN: ${oilVin}`] : []),
+          `Materials / 材料: ${oilMaterials === "shop" ? "Shop purchase; +$20 service fee, parts cost extra / 店家代买；+$20代买费，材料另付" : "Customer provided / 客户自备"}`,
+          "Used oil will be collected for proper recycling / 旧机油将统一回收处理"
+        ] : []),
         `Address / 地点: ${address}`,
         `Time / 时间: ${dateTextEn} ${timeTextEn}`,
         `Contact / 联系人: ${data.get("customerName")} · ${data.get("customerPhone")}${customerEmail ? ` · ${customerEmail}` : ""}`
@@ -1082,7 +1214,8 @@
       }
     }
 
-    // 分级收费：≤10 km $50；10–15 km +$10；15–20 km +$20；>20 km 不可预约
+    // Both services have a $50 base labour rate; distance surcharges are the same.
+    // ≤10 km $50; 10–15 km +$10; 15–20 km +$20; >20 km not bookable.
     const MAX_SERVICE_KM = 20;
     let outOfRangeAddress = "";
 
@@ -1091,13 +1224,13 @@
       outOfRangeAddress = "";
       if (km <= SURCHARGE_KM) {
         showBadge("nearby",
-          `${icons.check} <span>Within 10 km, standard rate applies / 在 10 公里范围内，正常收费 <strong>$50</strong></span>`);
+          `${icons.check} <span>Within 10 km: tire swap <strong>$50</strong>; oil change labour <strong>$50</strong> / 10 公里内：换胎 <strong>$50</strong>；换机油人工 <strong>$50</strong></span>`);
       } else if (km <= 15) {
         showBadge("far",
-          `${icons.warning} <span><strong>${kmStr} km</strong> — over 10 km, <strong>+$10</strong> surcharge applies / 超出 10 公里，需加收 <strong>+$10</strong> 远程费用</span>`);
+          `${icons.warning} <span><strong>${kmStr} km</strong> — one <strong>+$10</strong> travel surcharge per visit / 本次上门加收一次 <strong>+$10</strong> 远程费</span>`);
       } else if (km <= MAX_SERVICE_KM) {
         showBadge("far",
-          `${icons.warning} <span><strong>${kmStr} km</strong> — over 15 km, <strong>+$20</strong> surcharge applies / 超出 15 公里，需加收 <strong>+$20</strong> 远程费用</span>`);
+          `${icons.warning} <span><strong>${kmStr} km</strong> — one <strong>+$20</strong> travel surcharge per visit / 本次上门加收一次 <strong>+$20</strong> 远程费</span>`);
       } else {
         outOfRangeAddress = homeAddress.value.trim();
         showBadge("far",
