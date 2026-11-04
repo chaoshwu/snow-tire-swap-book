@@ -128,6 +128,7 @@
     .service-choice { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin: 10px 0 0; }
     .service-choice label { min-height: 66px; align-items: flex-start; }
     .service-choice .choice-text { line-height: 1.4; }
+    .service-choice .choice input:checked + label::before { border: 1px solid var(--green); background: var(--green); }
     .oil-options { margin-top: 16px; padding: 14px; border: 1px solid var(--line); border-radius: 5px; background: #fbfbf7; }
     .oil-options[hidden] { display: none; }
     .oil-options-title { margin: 0 0 4px; font-size: 13px; }
@@ -216,7 +217,7 @@
     .ac-wrap { position: relative; }
     .ac-list { position: absolute; z-index: 20; left: 0; right: 0; top: 100%; margin: 4px 0 0; padding: 4px 0; list-style: none; background: #fff; border: 1px solid #d8d8d2; border-radius: 4px; box-shadow: 0 6px 18px rgba(0,0,0,.1); max-height: 240px; overflow-y: auto; }
     .ac-list[hidden] { display: none; }
-    .ac-list li { padding: 9px 12px; font-size: 14px; cursor: pointer; line-height: 1.35; }
+    .ac-list li { min-height: 44px; padding: 10px 12px; font-size: 14px; cursor: pointer; line-height: 1.35; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
     .ac-list li small { display: block; color: var(--muted); font-size: 12px; }
     .ac-list li[aria-selected="true"], .ac-list li:hover { background: #f3f3ef; }
     .distance-badge { display: none; align-items: center; gap: 8px; margin-top: 8px; padding: 8px 11px; border-radius: 4px; font-size: 12px; line-height: 1.4; }
@@ -278,10 +279,10 @@
   <main>
     <section class="intro" aria-labelledby="page-title">
       <div>
-        <h1 id="page-title">Tire &amp; oil changes, on your time.<span class="zh zh-copy">换胎、换机油，按你的时间安排。</span></h1>
+        <h1 id="page-title">Tire &amp; oil changes, on your time.<span class="zh zh-copy">换胎、换机油，按你的时间安排</span></h1>
         <div class="service-prices" aria-label="Service prices / 服务价格">
-          <div class="price-callout" aria-label="Tire swap on-rim only price / 仅带轮毂换胎价格">
-            <span>Tire swap · On-rim only<span class="zh">换胎 · 仅带轮毂</span></span>
+          <div class="price-callout" aria-label="Tire swap on-rim only price / 限带轮毂换胎价格">
+            <span>Tire swap · On-rim only<span class="zh">换胎 · 限带轮毂</span></span>
             <strong>$50</strong>
           </div>
           <div class="price-callout" aria-label="Oil change labor price / 换机油人工费">
@@ -338,7 +339,7 @@
           </div>
           <div class="vehicle-list" id="vehicle-list">
           <div class="vehicle-card" id="vehicle-card-1">
-            <p class="vehicle-card-title">Vehicle 1 <span class="zh">车辆 1</span></p>
+            <p class="vehicle-card-title" id="vehicle-card-1-title">Vehicle 1 <span class="zh">车辆 1</span></p>
           <div class="field-grid">
             <div class="field">
               <select id="vehicle-year" name="year" required aria-label="Year / 年份"><option value="">Year / 年份</option></select>
@@ -504,6 +505,7 @@
     const vehicleTrimInput = document.querySelector("#vehicle-trim");
     const vehicleTrimLabel = document.querySelector("label[for='vehicle-trim']");
     const vehicleTrimLabelEn = document.querySelector("#vehicle-trim-label-en");
+    const vehicleCard1Title = document.querySelector("#vehicle-card-1-title");
     const vehicleCard2 = document.querySelector("#vehicle-card-2");
     const vehicleCountSelect = document.querySelector("#vehicle-count");
     const vehicleCountField = document.querySelector("#vehicle-count-field");
@@ -754,6 +756,7 @@
       vehicleTrimLabelEn.textContent = "Trim";
       vehicleCountField.hidden = isOilChange;
       vehicleCountSelect.disabled = isOilChange;
+      vehicleCard1Title.hidden = isOilChange;
       oilOptions.hidden = !isOilChange;
       includedTireTitle.hidden = isOilChange;
       includedTireList.hidden = isOilChange;
@@ -1041,7 +1044,7 @@
       const trustZh = document.createElement("p");
       trustZh.textContent = "已收到预约，上门前将通过短信/邮件再次确认。";
       const details = [
-        `Service / 服务: ${serviceType === "oil" ? "Oil change / 换机油" : "Tire swap · on-rim only / 换胎 · 仅带轮毂"}`,
+        `Service / 服务: ${serviceType === "oil" ? "Oil change / 换机油" : "Tire swap · on-rim only / 换胎 · 限带轮毂"}`,
         ...(vehicleText.length <= 1
           ? [`Vehicle / 车辆: ${vehicleText[0]}`]
           : vehicleText.map((text, index) => `Vehicle ${index + 1} / 车辆 ${index + 1}: ${text}`)),
@@ -1135,8 +1138,9 @@
           sub.textContent = it.secondary;
           li.appendChild(sub);
         }
-        // mousedown 阶段阻止失焦，避免点击建议前触发 blur 校验
-        li.addEventListener("mousedown", e => { e.preventDefault(); chooseSuggestion(i); });
+        // 保持输入框焦点直到点击发生，避免 blur 先关闭触屏浏览器里的建议列表
+        li.addEventListener("pointerdown", e => e.preventDefault());
+        li.addEventListener("click", () => chooseSuggestion(i));
         acList.appendChild(li);
       });
       acList.hidden = items.length === 0;
