@@ -16,7 +16,20 @@
   <meta name="twitter:description" content="Book tire &amp; oil changes / 预约换胎和换机油">
   <meta name="twitter:image" content="https://images.unsplash.com/photo-1585252522525-4f9ad48a24ea?auto=format&fit=crop&w=1200&h=630&q=85">
   <!-- Cloudflare Web Analytics -->
-  <script type="module" src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token": "8a792e2d244d44fca109bd6cb782c346"}'></script>
+  <script>
+    const analyticsTokens = {
+      'kanata-tire.pages.dev': '8a792e2d244d44fca109bd6cb782c346',
+      'kanatatire.pages.dev': 'dc7178b4401d404a8cae71187ca8f453'
+    };
+    const analyticsToken = analyticsTokens[location.hostname];
+    if (analyticsToken) {
+      const analyticsBeacon = document.createElement('script');
+      analyticsBeacon.type = 'module';
+      analyticsBeacon.src = 'https://static.cloudflareinsights.com/beacon.min.js';
+      analyticsBeacon.dataset.cfBeacon = JSON.stringify({ token: analyticsToken });
+      document.head.append(analyticsBeacon);
+    }
+  </script>
   <!-- End Cloudflare Web Analytics -->
   <title>Kanata Tire &amp; Oil | 换胎·换机油</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
