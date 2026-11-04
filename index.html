@@ -1151,9 +1151,12 @@
           sub.textContent = it.secondary;
           li.appendChild(sub);
         }
-        // 保持输入框焦点直到点击发生，避免 blur 先关闭触屏浏览器里的建议列表
-        li.addEventListener("pointerdown", e => e.preventDefault());
-        li.addEventListener("click", () => chooseSuggestion(i));
+        // 在 pointerdown 阶段选择，避免触屏浏览器因 preventDefault() 不派发 click，
+        // 也避免输入框 blur 先关闭建议列表。
+        li.addEventListener("pointerdown", e => {
+          e.preventDefault();
+          chooseSuggestion(i);
+        });
         acList.appendChild(li);
       });
       acList.hidden = items.length === 0;
