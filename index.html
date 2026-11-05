@@ -144,13 +144,18 @@
     .oil-options { margin-top: 16px; padding: 14px; border: 1px solid var(--line); border-radius: 5px; background: #fbfbf7; }
     .oil-options[hidden] { display: none; }
     .oil-options-title { margin: 0 0 4px; font-size: 13px; }
+    .oil-options-title .zh { margin-left: 5px; }
     .oil-options-note { margin: 0 0 10px; color: var(--muted); font-size: 11px; line-height: 1.5; }
     .oil-options .choice { margin-top: 8px; }
     .oil-options .choice label { justify-content: flex-start; }
     .oil-options .shop-choice label { flex-wrap: wrap; }
     .oil-options .choice .oil-option-note { flex: 0 0 calc(100% - 25px); margin-left: 25px; color: var(--muted); font-size: 11px; line-height: 1.5; }
-    .oil-option-fee { display: block; margin-top: 2px; color: var(--green-dark); font-size: 10px; font-weight: 600; white-space: nowrap; }
-    .oil-option-fee .zh-label { color: var(--green); font-weight: 500; }
+    .oil-option-note .en { font-size: 12px; }
+    .oil-option-note .zh { font-size: 10px; }
+    .oil-option-note > .zh { display: block; margin-top: 1px; }
+    .oil-option-fee { display: block; margin-top: 10px; color: var(--green); font-size: 12px; font-weight: 600; white-space: nowrap; }
+    .oil-option-fee .en, .oil-option-fee .zh { color: var(--green); }
+    .oil-option-fee .zh { font-size: 10px; font-weight: 500; }
     .oil-vin { max-width: 420px; margin: 16px 0 14px; }
     .oil-vin-hint { margin: 0; color: var(--muted); font-size: 11px; line-height: 1.5; }
     .choice { position: relative; }
@@ -401,7 +406,7 @@
           </div>
           </div>
           <div class="oil-options" id="oil-options" hidden>
-            <h3 class="oil-options-title">Oil change details<span class="zh">换机油信息</span></h3>
+            <h3 class="oil-options-title">Oil &amp; filter options<span class="zh">机油和滤芯准备方式</span></h3>
             <p class="oil-options-note" style="margin-top: 14px;">Choose who will prepare the materials. / 请选择材料准备方式。</p>
             <div class="choice">
               <input id="materials-customer" name="oilMaterials" type="radio" value="customer" disabled>
@@ -409,7 +414,7 @@
             </div>
             <div class="choice shop-choice">
               <input id="materials-shop" name="oilMaterials" type="radio" value="shop" disabled>
-              <label for="materials-shop"><span class="choice-text">Have us source &amp; pick up oil and filter<span class="zh">请帮我代购机油和滤芯</span></span><span class="oil-option-note">Parts billed at receipt cost / 零件费用按小票实报实销<span class="oil-option-fee">+$20 sourcing &amp; pickup fee / <span class="zh-label">代购跑腿费</span></span></span></label>
+              <label for="materials-shop"><span class="choice-text">Have us source &amp; pick up oil and filter<span class="zh">请帮我代购机油和滤芯</span></span><span class="oil-option-note"><span class="en">Parts billed at receipt cost</span><span class="zh">零件费用按小票实报实销</span><span class="oil-option-fee"><span class="en">Sourcing &amp; pickup fee</span> / <span class="zh">代购跑腿费</span>: +$20</span></span></label>
             </div>
             <div class="field oil-vin" id="oil-vin-field" hidden>
               <label for="oil-vin">VIN (required for sourcing) <span class="zh">VIN码（代购时必填）</span></label>
