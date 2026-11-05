@@ -151,6 +151,7 @@
     .oil-options .choice .oil-option-note { flex: 0 0 calc(100% - 25px); margin-left: 25px; color: var(--muted); font-size: 11px; line-height: 1.5; }
     .oil-options .choice label .oil-option-price { margin-left: auto; }
     .oil-option-price { max-width: 46%; color: var(--green-dark); font-size: 12px; font-weight: 700; text-align: right; white-space: normal; }
+    .oil-option-price .zh { display: block; margin-top: 2px; color: var(--muted); font-size: 11px; font-weight: 500; }
     .oil-vin { max-width: 420px; margin: 16px 0 14px; }
     .oil-vin-hint { margin: 0; color: var(--muted); font-size: 11px; line-height: 1.5; }
     .choice { position: relative; }
@@ -411,7 +412,7 @@
             </div>
             <div class="choice shop-choice">
               <input id="materials-shop" name="oilMaterials" type="radio" value="shop" disabled>
-              <label for="materials-shop"><span class="choice-text">Have us source &amp; pick up oil and filter<span class="zh">请帮我代购机油和滤芯</span></span><span class="oil-option-price">+$20 sourcing &amp; pickup fee</span><span class="oil-option-note">Parts billed at receipt cost / 零件费用按小票实报实销</span></label>
+              <label for="materials-shop"><span class="choice-text">Have us source &amp; pick up oil and filter<span class="zh">请帮我代购机油和滤芯</span></span><span class="oil-option-price">+$20 sourcing &amp; pickup fee<span class="zh">+$20 代购跑腿费</span></span><span class="oil-option-note">Parts billed at receipt cost / 零件费用按小票实报实销</span></label>
             </div>
             <div class="field oil-vin" id="oil-vin-field" hidden>
               <label for="oil-vin">VIN (required for sourcing) <span class="zh">VIN码（代购时必填）</span></label>
