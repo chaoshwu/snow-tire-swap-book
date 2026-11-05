@@ -141,16 +141,18 @@
     .service-choice { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin: 10px 0 0; }
     .service-choice label { min-height: 66px; align-items: flex-start; }
     .service-choice .choice-text { line-height: 1.4; }
-    .service-choice .choice input:checked + label::before { border: 1px solid var(--green); background: var(--green); }
     .oil-options { margin-top: 16px; padding: 14px; border: 1px solid var(--line); border-radius: 5px; background: #fbfbf7; }
     .oil-options[hidden] { display: none; }
     .oil-options-title { margin: 0 0 4px; font-size: 13px; }
     .oil-options-note { margin: 0 0 10px; color: var(--muted); font-size: 11px; line-height: 1.5; }
     .oil-options .choice { margin-top: 8px; }
     .oil-options .choice label { justify-content: flex-start; }
+    .oil-options .shop-choice label { flex-wrap: wrap; }
+    .oil-options .choice .oil-option-note { flex: 0 0 calc(100% - 25px); margin-left: 25px; color: var(--muted); font-size: 11px; line-height: 1.5; }
     .oil-options .choice label .oil-option-price { margin-left: auto; }
-    .oil-option-price { color: var(--green-dark); font-size: 12px; font-weight: 700; white-space: nowrap; }
-    .oil-vin { max-width: 320px; margin: 0 0 14px; }
+    .oil-option-price { max-width: 46%; color: var(--green-dark); font-size: 12px; font-weight: 700; text-align: right; white-space: normal; }
+    .oil-vin { max-width: 420px; margin: 16px 0 14px; }
+    .oil-vin-hint { margin: 0; color: var(--muted); font-size: 11px; line-height: 1.5; }
     .choice { position: relative; }
     .choice input { position: absolute; width: 1px; height: 1px; opacity: 0; }
     .choice label {
@@ -160,7 +162,7 @@
     }
     .choice label::before { width: 14px; height: 14px; flex: 0 0 14px; border: 1px solid #a8aca3; border-radius: 50%; content: ""; }
     .choice input:checked + label { border-color: var(--green); background: var(--soft-green); }
-    .choice input:checked + label::before { border: 4px solid var(--green); background: #fff; }
+    .choice input:checked + label::before { border: 1px solid var(--green); background: var(--green); }
     .choice input:focus-visible + label { outline: 3px solid rgba(49, 107, 80, .2); }
     .address-field[hidden] { display: none; }
     .address-hint { margin: 0 0 12px; color: var(--muted); font-size: 12px; }
@@ -395,18 +397,19 @@
           </div>
           <div class="oil-options" id="oil-options" hidden>
             <h3 class="oil-options-title">Oil change details<span class="zh">换机油信息</span></h3>
-            <div class="field oil-vin">
-              <label for="oil-vin">VIN (recommended) <span class="zh">VIN码（建议填写）</span></label>
-              <input id="oil-vin" name="oilVin" type="text" maxlength="17" pattern="[A-HJ-NPR-Z0-9]{17}" title="Enter a 17-character VIN / 请输入17位VIN码" autocapitalize="characters" spellcheck="false" placeholder="17-character VIN / 17位VIN码" disabled>
-            </div>
             <p class="oil-options-note" style="margin-top: 14px;">Choose who will prepare the materials. / 请选择材料准备方式。</p>
             <div class="choice">
               <input id="materials-customer" name="oilMaterials" type="radio" value="customer" disabled>
-              <label for="materials-customer"><span class="choice-text">I’ll provide the materials<span class="zh">我自备机油和滤芯</span></span></label>
+              <label for="materials-customer"><span class="choice-text">Customer will provide oil and filter<span class="zh">客户自备机油和滤芯</span></span></label>
             </div>
-            <div class="choice">
+            <div class="choice shop-choice">
               <input id="materials-shop" name="oilMaterials" type="radio" value="shop" disabled>
-              <label for="materials-shop"><span class="choice-text">Have us buy the oil &amp; filter; parts cost extra<span class="zh">请帮我代买机油和滤芯（材料费另付）</span></span><span class="oil-option-price">+$20 service fee</span></label>
+              <label for="materials-shop"><span class="choice-text">Have us source &amp; pick up oil and filter<span class="zh">请帮我代购机油和滤芯</span></span><span class="oil-option-price">+$20 sourcing &amp; pickup fee</span><span class="oil-option-note">Parts billed at receipt cost / 零件费用按小票实报实销</span></label>
+            </div>
+            <div class="field oil-vin" id="oil-vin-field" hidden>
+              <label for="oil-vin">VIN (required for sourcing) <span class="zh">VIN码（代购时必填）</span></label>
+              <input id="oil-vin" name="oilVin" type="text" maxlength="17" pattern="[A-HJ-NPR-Z0-9]{17}" title="Enter a 17-character VIN / 请输入17位VIN码" autocapitalize="characters" spellcheck="false" placeholder="17-character VIN / 17位VIN码" disabled>
+              <p class="oil-vin-hint">Look through the windshield at the driver-side dashboard, check the driver-side door jamb, or see your vehicle registration. / 可查看驾驶员侧挡风玻璃下方、车门框标签或车辆登记文件。</p>
             </div>
           </div>
           <p class="schedule-hint" id="vehicle-schedule-hint" hidden>Weekend appointments for two vehicles require two consecutive available time slots. / 周末两辆车需要预约连续两个可选时段。</p>
@@ -483,9 +486,8 @@
               <li><strong>Hub cleaning &amp; anti-seize</strong><span class="zh">轮毂接触面除锈清洁并涂抗卡死剂</span></li>
             </ul>
             <ul id="included-oil-list" hidden>
-              <li><strong>Oil &amp; filter replacement (labour only)</strong><span class="zh">更换机油及滤芯（仅人工）</span></li>
-              <li><strong>Oil &amp; filter costs are paid separately</strong><span class="zh">机油和滤芯材料费用另付</span></li>
-              <li><strong>Shop purchase: +$20 service fee; parts extra</strong><span class="zh">代买服务费+$20，材料费另付</span></li>
+              <li><strong>Oil &amp; filter replacement: $50 labour</strong><span class="zh">更换机油及滤芯：人工费$50</span></li>
+              <li><strong>Sourcing &amp; pickup fee: +$20 (parts billed at receipt cost)</strong><span class="zh">+$20 代购跑腿费（零件费用按小票实报实销）</span></li>
               <li><strong>Used oil is collected for proper recycling</strong><span class="zh">旧机油将统一回收处理</span></li>
             </ul>
           </div>
@@ -524,12 +526,14 @@
     const vehicleCountField = document.querySelector("#vehicle-count-field");
     const vehicleScheduleHint = document.querySelector("#vehicle-schedule-hint");
     const oilOptions = document.querySelector("#oil-options");
+    const oilVinField = document.querySelector("#oil-vin-field");
     const oilVinInput = document.querySelector("#oil-vin");
     const includedTireTitle = document.querySelector("#included-tire-title");
     const includedOilTitle = document.querySelector("#included-oil-title");
     const includedTireList = document.querySelector("#included-tire-list");
     const includedOilList = document.querySelector("#included-oil-list");
     const oilMaterialsRadios = form.querySelectorAll('input[name="oilMaterials"]');
+    const oilMaterialsShopOption = document.querySelector("#materials-shop");
     const tireServiceOption = document.querySelector("#service-tire");
     const oilServiceOption = document.querySelector("#service-oil");
     const supabaseConfig = window.SUPABASE_CONFIG || {};
@@ -779,7 +783,7 @@
         radio.disabled = !isOilChange;
         radio.required = isOilChange;
       });
-      oilVinInput.disabled = !isOilChange;
+      updateOilVinField();
       if (isOilChange) {
         vehicleCountSelect.value = "1";
         vehicleCount = 1;
@@ -790,7 +794,14 @@
       }
       if (selectedDate) renderTimes(selectedDate);
     }
+    function updateOilVinField() {
+      const needsSourcingVin = oilServiceOption.checked && oilMaterialsShopOption.checked;
+      oilVinField.hidden = !needsSourcingVin;
+      oilVinInput.disabled = !needsSourcingVin;
+      oilVinInput.required = needsSourcingVin;
+    }
     [tireServiceOption, oilServiceOption].forEach((option) => option.addEventListener("change", updateServiceFields));
+    oilMaterialsRadios.forEach((radio) => radio.addEventListener("change", updateOilVinField));
     oilVinInput.addEventListener("input", () => { oilVinInput.value = oilVinInput.value.toUpperCase(); });
     updateServiceFields();
 
@@ -1063,7 +1074,7 @@
           : vehicleText.map((text, index) => `Vehicle ${index + 1} / 车辆 ${index + 1}: ${text}`)),
         ...(serviceType === "oil" ? [
           ...(oilVin ? [`VIN: ${oilVin}`] : []),
-          `Materials / 材料: ${oilMaterials === "shop" ? "Shop purchase; +$20 service fee, parts cost extra / 店家代买；+$20代买费，材料另付" : "Customer provided / 客户自备"}`,
+          `Materials / 材料: ${oilMaterials === "shop" ? "Sourcing & pickup fee +$20; parts billed at receipt cost / +$20代购跑腿费；零件费用按小票实报实销" : "Customer provided / 客户自备"}`,
           "Used oil will be collected for proper recycling / 旧机油将统一回收处理"
         ] : []),
         `Address / 地点: ${address}`,
