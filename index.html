@@ -274,6 +274,13 @@
       .field-grid { grid-template-columns: 1fr; gap: 13px 0; }
       .field.full { grid-column: auto; }
       .vehicle-card .field-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 11px 9px; }
+      .oil-options .shop-choice label { display: grid; grid-template-columns: 14px minmax(0, 1fr); align-items: start; column-gap: 9px; }
+      .oil-options .shop-choice label .choice-text,
+      .oil-options .shop-choice label .oil-option-price,
+      .oil-options .shop-choice label .oil-option-note { grid-column: 2; }
+      .oil-options .shop-choice label .choice-text { grid-row: 1; }
+      .oil-options .shop-choice label .oil-option-price { grid-row: 2; max-width: none; margin: 4px 0 0; text-align: left; }
+      .oil-options .shop-choice label .oil-option-note { grid-row: 3; flex-basis: auto; margin: 2px 0 0; }
       .weekday-grid, .date-grid { gap: 3px; }
       .date-button { max-width: 38px; min-height: 36px; }
       .time-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
