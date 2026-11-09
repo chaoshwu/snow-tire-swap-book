@@ -10,6 +10,9 @@ type AppointmentRecord = {
   vehicle_2_make: string | null;
   vehicle_2_model: string | null;
   vehicle_2_trim: string | null;
+  service_type: string | null;
+  oil_vin: string | null;
+  oil_materials: string | null;
   location_type: string;
   service_address: string;
   customer_name: string;
@@ -74,6 +77,16 @@ Deno.serve(async (request: Request) => {
   }
 
   const time = appointment.appointment_time.slice(0, 5);
+  const serviceType = appointment.service_type || "tire";
+  const isCombinedService = serviceType === "both";
+  const isOilService = serviceType === "oil" || isCombinedService;
+  const serviceLabel = isCombinedService
+    ? "Tire swap + oil change"
+    : serviceType === "oil" ? "Oil change" : "Tire swap";
+  const startHour = Number(time.slice(0, 2));
+  const timeLabel = isCombinedService
+    ? `${time}–${String(startHour + 2).padStart(2, "0")}:00`
+    : time;
   const customerPhone = appointment.customer_phone?.trim() || "Not provided";
   const customerEmail = appointment.customer_email?.trim() || "Not provided";
   const vehicle = [
@@ -90,7 +103,8 @@ Deno.serve(async (request: Request) => {
   ].filter(Boolean).join(" ");
   const emailDetails: Array<{ label: string; value: string }> = [
     { label: "Date", value: appointment.appointment_date },
-    { label: "Time", value: time },
+    { label: "Time", value: timeLabel },
+    { label: "Service", value: serviceLabel },
     { label: "Vehicle", value: vehicle },
     { label: "Service location", value: appointment.location_type },
     { label: "Address", value: appointment.service_address },
@@ -99,9 +113,18 @@ Deno.serve(async (request: Request) => {
     { label: "Email", value: customerEmail },
   ];
   if (secondVehicle) emailDetails.splice(3, 0, { label: "Vehicle 2", value: secondVehicle });
+  if (isOilService) {
+    if (appointment.oil_vin) emailDetails.splice(4, 0, { label: "VIN", value: appointment.oil_vin });
+    emailDetails.splice(appointment.oil_vin ? 5 : 4, 0, {
+      label: "Oil and filter",
+      value: appointment.oil_materials === "shop"
+        ? "Shop sourcing and pickup (+$20); parts billed at receipt cost"
+        : "Customer provided",
+    });
+  }
 
   const emailLines = [
-    "NEW TIRE-CHANGE APPOINTMENT",
+    "NEW SERVICE APPOINTMENT",
     "",
     ...emailDetails.map(({ label, value }) => `${label}: ${value}`),
   ];
@@ -114,7 +137,7 @@ Deno.serve(async (request: Request) => {
 <html>
   <body style="margin: 0; padding: 24px; background: #f5f6f2; font-family: Arial, Helvetica, sans-serif; color: #252820;">
     <div style="max-width: 640px; margin: 0 auto; padding: 24px; border: 1px solid #e8e8e3; border-radius: 12px; background: #ffffff;">
-      <h1 style="margin: 0 0 18px; color: #33432e; font-size: 20px;">New tire-change appointment</h1>
+      <h1 style="margin: 0 0 18px; color: #33432e; font-size: 20px;">New service appointment</h1>
       <table role="presentation" style="width: 100%; border-collapse: collapse;">${emailRows}
       </table>
     </div>
@@ -132,7 +155,7 @@ Deno.serve(async (request: Request) => {
       from: senderEmail,
       to: [notificationEmail],
       reply_to: appointment.customer_email || undefined,
-      subject: `New tire appointment: ${appointment.appointment_date} ${time}`,
+      subject: `New ${serviceLabel.toLowerCase()} appointment: ${appointment.appointment_date} ${time}`,
       text: emailLines.join("\n"),
       html: emailHtml,
     }),

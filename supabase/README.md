@@ -28,6 +28,12 @@ select cron.schedule(
 
 Run `select public.archive_past_appointments();` once after installing the updated schema to archive any history that already exists.
 
+### Combined tire and oil appointments
+
+For an existing project, run `supabase/migrations/20261109_combined_service_bookings.sql` in the Supabase SQL Editor before publishing the updated booking page. It adds the combined service type and `create_appointment_v4`, which reserves two consecutive weekend slots for one vehicle. A combined booking may start at 4:00 PM and finish at 6:00 PM; standalone tire and oil bookings keep their current scheduling rules.
+
+Deploy the updated `smooth-api` function after the database migration so shop notification emails include the selected services and oil details. The booking page continues to use the current service-specific form details when one service is selected, and shows both sets of details when both are selected.
+
 This checks once per day at 00:15 in the database timezone. The function itself uses `America/Toronto` time when deciding which appointments are past. Historical rows remain available through `public.archived_appointments` for analysis.
 
 ## 3. Connect the page

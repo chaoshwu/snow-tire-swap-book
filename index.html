@@ -140,7 +140,10 @@
     .divider { height: 1px; margin: 25px 0 22px; background: var(--line); }
     .address-choice { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin: 10px 0 15px; }
     .service-choice { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin: 10px 0 0; }
+    .service-selection-hint { margin: -10px 0 12px; color: var(--muted); font-size: 11px; line-height: 1.5; }
     .service-choice label { min-height: 66px; align-items: flex-start; }
+    .service-choice label::before { border-radius: 3px; }
+    .service-choice input:checked + label::before { display: grid; place-items: center; color: #fff; content: "✓"; font-size: 11px; font-weight: 700; }
     .service-choice .choice-text { line-height: 1.4; }
     .oil-options { margin-top: 16px; padding: 14px; border: 1px solid var(--line); border-radius: 5px; background: #fbfbf7; }
     .oil-options[hidden] { display: none; }
@@ -339,14 +342,15 @@
         <div class="divider"></div>
 
         <section aria-labelledby="service-heading">
-          <h2 class="section-heading" id="service-heading"><span class="section-number">02</span><span>Choose a service<span class="zh">选择服务</span></span></h2>
-          <div class="service-choice" role="radiogroup" aria-label="Choose one service / 选择一项服务">
+          <h2 class="section-heading" id="service-heading"><span class="section-number">02</span><span>Choose services</span></h2>
+          <p class="service-selection-hint">Select one or both services / 可单选或同时选择两项服务</p>
+          <div class="service-choice" role="group" aria-label="Choose one or both services / 选择一项或两项服务">
             <div class="choice">
-              <input id="service-tire" name="serviceType" type="radio" value="tire" checked required>
+              <input id="service-tire" name="serviceType" type="checkbox" value="tire" checked>
               <label for="service-tire"><span class="choice-text">Seasonal tire swap<span class="zh">季节换胎</span></span></label>
             </div>
             <div class="choice">
-              <input id="service-oil" name="serviceType" type="radio" value="oil" required>
+              <input id="service-oil" name="serviceType" type="checkbox" value="oil">
               <label for="service-oil"><span class="choice-text">Oil change<span class="zh">换机油</span></span></label>
             </div>
           </div>
@@ -554,6 +558,7 @@
       : null;
     let selectedDate = null;
     let selectedTime = null;
+    let timeRenderVersion = 0;
     let vehicleCount = 1;
     let bookingConfirmed = false;
     function getServiceToday() {
@@ -776,18 +781,21 @@
     vehicleCard2.querySelectorAll("input, select").forEach((field) => { field.disabled = true; });
 
     function updateServiceFields() {
+      const isTireChange = tireServiceOption.checked;
       const isOilChange = oilServiceOption.checked;
+      const isCombinedService = isTireChange && isOilChange;
+      const requiresTwoSlots = isCombinedService || (isTireChange && vehicleCount === 2);
       vehicleTrimLabel.classList.add("visually-hidden");
       vehicleTrimInput.required = isOilChange;
       vehicleTrimInput.placeholder = isOilChange ? "Trim / 配置（2.5L）" : "Trim / 配置";
       vehicleTrimInput.setAttribute("aria-label", "Trim");
       vehicleTrimLabelEn.textContent = "Trim";
-      vehicleCountField.hidden = isOilChange;
-      vehicleCountSelect.disabled = isOilChange;
-      vehicleCard1Title.hidden = isOilChange;
+      vehicleCountField.hidden = !isTireChange || isOilChange;
+      vehicleCountSelect.disabled = !isTireChange || isOilChange;
+      vehicleCard1Title.hidden = !isTireChange || isOilChange;
       oilOptions.hidden = !isOilChange;
-      includedTireTitle.hidden = isOilChange;
-      includedTireList.hidden = isOilChange;
+      includedTireTitle.hidden = !isTireChange;
+      includedTireList.hidden = !isTireChange;
       includedOilTitle.hidden = !isOilChange;
       includedOilList.hidden = !isOilChange;
       oilMaterialsRadios.forEach((radio) => {
@@ -795,14 +803,17 @@
         radio.required = isOilChange;
       });
       updateOilVinField();
-      if (isOilChange) {
+      if (!isTireChange || isOilChange) {
         vehicleCountSelect.value = "1";
         vehicleCount = 1;
         vehicleCard2.classList.remove("visible");
         vehicleCard2.setAttribute("aria-hidden", "true");
         vehicleCard2.querySelectorAll("input, select").forEach((field) => { field.disabled = true; });
-        vehicleScheduleHint.hidden = true;
       }
+      vehicleScheduleHint.hidden = !requiresTwoSlots;
+      vehicleScheduleHint.textContent = isCombinedService
+        ? "Combined tire and oil service needs two consecutive weekend slots; a 4 PM start may finish at 6 PM. / 换胎和换机油组合服务需要预约周末连续两个时段；下午4点开始的预约可能在下午6点结束。"
+        : "Weekend appointments for two vehicles require two consecutive available time slots. / 周末两辆车需要预约连续两个可选时段。";
       if (selectedDate) renderTimes(selectedDate);
     }
     function updateOilVinField() {
@@ -905,6 +916,7 @@
     nextMonthButton.addEventListener("click", () => moveMonth(1));
 
     async function renderTimes(date) {
+      const renderVersion = ++timeRenderVersion;
       timeGrid.replaceChildren();
       const day = date.getDay();
       const serviceNow = getServiceNow();
@@ -920,7 +932,7 @@
           p_start_date: dateKey,
           p_end_date: dateKey
         });
-        if (selectedDate && formatDate(selectedDate) !== dateKey) return;
+        if (renderVersion !== timeRenderVersion || (selectedDate && formatDate(selectedDate) !== dateKey)) return;
         if (error) {
           availabilityError = error;
         } else {
@@ -929,6 +941,7 @@
       }
 
       const isWeekend = day === 0 || day === 6;
+      const isCombinedService = tireServiceOption.checked && oilServiceOption.checked;
       const displayHours = isWeekend ? [8, 9, 10, 11, 13, 14, 15, 16] : [17];
       selectedDateLabel.textContent = `${monthNames[date.getMonth()]} ${date.getDate()} · ${weekdayNames[date.getDay()]}`;
       for (const hour of displayHours) {
@@ -939,21 +952,23 @@
         const slotTime = new Date(date.getFullYear(), date.getMonth(), date.getDate(), hour);
         const isPastLeadTime = isToday && slotTime < minimumBookableTime;
         const nextTimeValue = `${String(hour + 1).padStart(2, "0")}:00`;
-        const needsNextSlot = vehicleCount === 2 && isWeekend;
-        const nextSlotUnavailable = needsNextSlot && (hour === 11 || hour === 16 || bookedSlots.has(nextTimeValue));
+        const needsNextSlot = isWeekend && (isCombinedService || vehicleCount === 2);
+        const combinedWeekdayUnavailable = isCombinedService && !isWeekend;
+        const nextSlotUnavailable = needsNextSlot && (
+          hour === 11 || (hour === 16 && !isCombinedService) || bookedSlots.has(nextTimeValue)
+        );
         button.type = "button";
         button.className = "time-button";
         button.innerHTML = `${displayHour}:00 ${suffix}<span class="zh">${suffix === "AM" ? "上午" : "下午"} ${displayHour}:00</span>`;
         button.setAttribute("aria-pressed", "false");
         if (!supabaseClient || availabilityError) {
           button.disabled = true;
-        } else if (bookedSlots.has(timeValue)) {
+        } else if (bookedSlots.has(timeValue) || isPastLeadTime) {
           button.disabled = true;
-          button.setAttribute("aria-label", `${displayHour}:00 ${suffix}, unavailable / 不可预约`);
-        } else if (isPastLeadTime) {
+        } else if (combinedWeekdayUnavailable) {
           button.disabled = true;
-          button.innerHTML = `${displayHour}:00 ${suffix}<span class="zh">Unavailable / 不可预约</span>`;
-          button.setAttribute("aria-label", `${displayHour}:00 ${suffix}, unavailable / 不可预约`);
+          button.innerHTML = `${displayHour}:00 ${suffix}<span class="zh">Weekend slots required / 组合服务需周末时段</span>`;
+          button.setAttribute("aria-label", `${displayHour}:00 ${suffix}, combined service requires weekend slots`);
         } else if (nextSlotUnavailable) {
           button.disabled = true;
           button.innerHTML = `${displayHour}:00 ${suffix}<span class="zh">Needs next slot / 需连续时段</span>`;
@@ -983,6 +998,11 @@
       event.preventDefault();
       if (bookingConfirmed) return;
       confirmation.classList.remove("visible");
+      if (!tireServiceOption.checked && !oilServiceOption.checked) {
+        formError.textContent = "Choose at least one service. / 请至少选择一项服务。";
+        formError.classList.add("visible");
+        return;
+      }
       if (!form.reportValidity()) return;
       if (!supabaseClient) {
         formError.textContent = "Supabase is not connected. Add your project URL and anon key first. / Supabase 尚未连接，请先填写项目 URL 和 anon key。";
@@ -1018,12 +1038,16 @@
         return { year: Number(data.get(`year${suffix}`)), make: vehicleMake, model: vehicleModel, trim: (data.get(`trim${suffix}`) || "").trim() };
       }
       const vehicle1 = readVehicle();
-      const vehicle2 = vehicleCount === 2 ? readVehicle("2") : null;
-      const serviceType = oilServiceOption.checked ? "oil" : "tire";
-      const oilVin = serviceType === "oil" ? String(data.get("oilVin") || "").trim().toUpperCase() : null;
-      const oilMaterials = serviceType === "oil" ? data.get("oilMaterials") : null;
+      const hasTireService = tireServiceOption.checked;
+      const hasOilService = oilServiceOption.checked;
+      const isCombinedService = hasTireService && hasOilService;
+      const vehicle2 = hasTireService && !hasOilService && vehicleCount === 2 ? readVehicle("2") : null;
+      const serviceType = isCombinedService ? "both" : hasOilService ? "oil" : "tire";
+      const oilVin = hasOilService ? String(data.get("oilVin") || "").trim().toUpperCase() : null;
+      const oilMaterials = hasOilService ? data.get("oilMaterials") : null;
       const isWeekend = selectedDate.getDay() === 0 || selectedDate.getDay() === 6;
-      const secondTime = vehicleCount === 2 && isWeekend
+      const needsSecondSlot = (isCombinedService || vehicle2) && isWeekend;
+      const secondTime = needsSecondSlot
         ? `${String(Number(selectedTime.slice(0, 2)) + 1).padStart(2, "0")}:00`
         : selectedTime;
       const dateText = `${monthNames[selectedDate.getMonth()]} ${selectedDate.getDate()}, ${selectedDate.getFullYear()} (${weekdayNames[selectedDate.getDay()]})`;
@@ -1031,10 +1055,16 @@
       const timeHour = Number(selectedTime.slice(0, 2));
       const timeText = `${timeHour % 12 || 12}:00 ${timeHour >= 12 ? "PM" : "AM"} / ${timeHour >= 12 ? "下午" : "上午"} ${timeHour % 12 || 12}:00`;
       const timeTextEn = `${timeHour % 12 || 12}:00 ${timeHour >= 12 ? "PM" : "AM"}`;
+      const endHour = timeHour + 2;
+      const startSuffix = timeHour >= 12 ? "PM" : "AM";
+      const endSuffix = endHour >= 12 ? "PM" : "AM";
+      const formatChineseTime = (hour) => `${hour === 12 ? "中午" : hour >= 12 ? "下午" : "上午"}${hour % 12 || 12}:00`;
+      const timeRangeTextEn = `${timeHour % 12 || 12}:00 ${startSuffix}–${endHour % 12 || 12}:00 ${endSuffix}`;
+      const timeRangeText = `${timeRangeTextEn} / ${formatChineseTime(timeHour)}–${formatChineseTime(endHour)}`;
       const vehicleText = [vehicle1, vehicle2].filter(Boolean).map((vehicle) => [vehicle.year, vehicle.make, vehicle.model, vehicle.trim].filter(Boolean).join(" "));
       const customerEmail = String(data.get("customerEmail") || "").trim();
 
-      const { error } = await supabaseClient.rpc("create_appointment_v3", {
+      const { error } = await supabaseClient.rpc("create_appointment_v4", {
         p_appointment_date: formatDate(selectedDate),
         p_appointment_time: selectedTime,
         p_vehicle_year: vehicle1.year,
@@ -1078,18 +1108,21 @@
       trustEn.textContent = "Booking received. We'll text/email to reconfirm before your appointment.";
       const trustZh = document.createElement("p");
       trustZh.textContent = "已收到预约，上门前将通过短信/邮件再次确认。";
+      const serviceLabel = serviceType === "both"
+        ? "Tire swap + oil change / 换胎 + 换机油"
+        : serviceType === "oil" ? "Oil change / 换机油" : "Tire swap · on-rim only / 换胎 · 限带轮毂";
       const details = [
-        `Service / 服务: ${serviceType === "oil" ? "Oil change / 换机油" : "Tire swap · on-rim only / 换胎 · 限带轮毂"}`,
+        `Service / 服务: ${serviceLabel}`,
         ...(vehicleText.length <= 1
           ? [`Vehicle / 车辆: ${vehicleText[0]}`]
           : vehicleText.map((text, index) => `Vehicle ${index + 1} / 车辆 ${index + 1}: ${text}`)),
-        ...(serviceType === "oil" ? [
+        ...(hasOilService ? [
           ...(oilVin ? [`VIN: ${oilVin}`] : []),
           `Materials / 材料: ${oilMaterials === "shop" ? "Sourcing & pickup fee +$20; parts billed at receipt cost / +$20代购跑腿费；零件费用按小票实报实销" : "Customer provided / 客户自备"}`,
           "Used oil will be collected for proper recycling / 旧机油将统一回收处理"
         ] : []),
         `Address / 地点: ${address}`,
-        `Time / 时间: ${dateTextEn} ${timeTextEn}`,
+        `Time / 时间: ${dateTextEn} ${isCombinedService ? timeRangeText : `${timeTextEn} / ${timeText.split(" / ")[1]}`}`,
         `Contact / 联系人: ${data.get("customerName")} · ${data.get("customerPhone")}${customerEmail ? ` · ${customerEmail}` : ""}`
       ];
       confirmation.append(heading);
