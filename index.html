@@ -141,6 +141,9 @@
     .address-choice { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin: 10px 0 15px; }
     .service-choice { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin: 10px 0 0; }
     .service-selection-hint { margin: -10px 0 12px; color: var(--muted); font-size: 11px; line-height: 1.5; }
+    .combined-service-notice { margin: 10px 0 0; padding: 9px 11px; border-radius: 4px; background: var(--soft-green); color: var(--green-dark); font-size: 11px; line-height: 1.5; }
+    .combined-service-notice[hidden] { display: none; }
+    .combined-service-notice .zh { display: block; margin-top: 2px; color: inherit; }
     .service-choice label { min-height: 66px; align-items: flex-start; }
     .service-choice label::before { border-radius: 3px; }
     .service-choice input:checked + label::before { display: grid; place-items: center; color: #fff; content: "✓"; font-size: 11px; font-weight: 700; }
@@ -354,6 +357,7 @@
               <label for="service-oil"><span class="choice-text">Oil change<span class="zh">换机油</span></span></label>
             </div>
           </div>
+          <p class="combined-service-notice" id="combined-service-notice" role="status" aria-live="polite" hidden>Both services selected: Tire swap + oil change.<span class="zh">已选择两项服务：换胎 + 换机油。</span></p>
         </section>
 
         <div class="divider"></div>
@@ -551,6 +555,7 @@
     const oilMaterialsShopOption = document.querySelector("#materials-shop");
     const tireServiceOption = document.querySelector("#service-tire");
     const oilServiceOption = document.querySelector("#service-oil");
+    const combinedServiceNotice = document.querySelector("#combined-service-notice");
     const supabaseConfig = window.SUPABASE_CONFIG || {};
     const serviceTimeZone = "America/Toronto";
     const supabaseClient = window.supabase && supabaseConfig.url && supabaseConfig.anonKey
@@ -785,6 +790,7 @@
       const isOilChange = oilServiceOption.checked;
       const isCombinedService = isTireChange && isOilChange;
       const requiresTwoSlots = isCombinedService || (isTireChange && vehicleCount === 2);
+      combinedServiceNotice.hidden = !isCombinedService;
       vehicleTrimLabel.classList.add("visually-hidden");
       vehicleTrimInput.required = isOilChange;
       vehicleTrimInput.placeholder = isOilChange ? "Trim / 配置（2.5L）" : "Trim / 配置";
