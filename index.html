@@ -977,7 +977,6 @@
           button.setAttribute("aria-label", `${displayHour}:00 ${suffix}, combined service requires weekend slots`);
         } else if (nextSlotUnavailable) {
           button.disabled = true;
-          button.innerHTML = `${displayHour}:00 ${suffix}<span class="zh">Needs next slot / 需连续时段</span>`;
           button.setAttribute("aria-label", `${displayHour}:00 ${suffix}, needs the next consecutive slot / 需要下一个连续时段`);
         }
         if (selectedTime === timeValue && !button.disabled) {
@@ -994,9 +993,6 @@
       if (selectedTime && !selectedTimeStillAvailable) selectedTime = null;
     }
 
-    setInterval(() => {
-      if (selectedDate && !document.hidden) renderTimes(selectedDate);
-    }, 30 * 1000);
     document.addEventListener("visibilitychange", () => {
       if (!document.hidden && selectedDate) renderTimes(selectedDate);
     });
