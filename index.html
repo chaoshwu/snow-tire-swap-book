@@ -76,6 +76,7 @@
     .intro-copy { max-width: 320px; margin: 0 0 4px; color: var(--muted); font-size: 14px; line-height: 1.7; }
     .included { margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--line); color: var(--green-dark); }
     .included-title { margin: 0 0 10px; font-size: 13px; font-weight: 700; letter-spacing: .02em; }
+    #included-tire-list:not([hidden]) + #included-oil-list:not([hidden]) { margin-top: 14px; }
     .included-title .zh, .included li .zh { display: block; color: var(--muted); font-size: 11px; font-weight: 500; }
     .included [hidden] { display: none !important; }
     .included ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 9px; }
@@ -497,8 +498,7 @@
               <div class="hours-row"><span>Sat–Sun<br>周六、周日</span><strong>8:00 AM — 5:00 PM</strong></div>
           </div>
           <div class="included" aria-label="Service details / 服务详情">
-            <h3 class="included-title" id="included-tire-title">Included<span class="zh">服务包含</span></h3>
-            <h3 class="included-title" id="included-oil-title" hidden>Oil change details<span class="zh">换机油服务说明</span></h3>
+            <h3 class="included-title" id="included-title">Included<span class="zh">服务包含</span></h3>
             <ul id="included-tire-list">
               <li><strong>Torque-spec lug nuts</strong><span class="zh">按规格扭矩锁紧螺母</span></li>
               <li><strong>Tire pressure check &amp; inflation</strong><span class="zh">胎压检查与充气</span></li>
@@ -547,8 +547,7 @@
     const oilOptions = document.querySelector("#oil-options");
     const oilVinField = document.querySelector("#oil-vin-field");
     const oilVinInput = document.querySelector("#oil-vin");
-    const includedTireTitle = document.querySelector("#included-tire-title");
-    const includedOilTitle = document.querySelector("#included-oil-title");
+    const includedTitle = document.querySelector("#included-title");
     const includedTireList = document.querySelector("#included-tire-list");
     const includedOilList = document.querySelector("#included-oil-list");
     const oilMaterialsRadios = form.querySelectorAll('input[name="oilMaterials"]');
@@ -800,9 +799,8 @@
       vehicleCountSelect.disabled = !isTireChange || isOilChange;
       vehicleCard1Title.hidden = !isTireChange || isOilChange;
       oilOptions.hidden = !isOilChange;
-      includedTireTitle.hidden = !isTireChange;
+      includedTitle.hidden = !isTireChange && !isOilChange;
       includedTireList.hidden = !isTireChange;
-      includedOilTitle.hidden = !isOilChange;
       includedOilList.hidden = !isOilChange;
       oilMaterialsRadios.forEach((radio) => {
         radio.disabled = !isOilChange;
@@ -817,9 +815,11 @@
         vehicleCard2.querySelectorAll("input, select").forEach((field) => { field.disabled = true; });
       }
       vehicleScheduleHint.hidden = !requiresTwoSlots;
-      vehicleScheduleHint.textContent = isCombinedService
-        ? "Combined tire and oil service needs two consecutive weekend slots; a 4 PM start may finish at 6 PM. / 换胎和换机油组合服务需要预约周末连续两个时段；下午4点开始的预约可能在下午6点结束。"
-        : "Weekend appointments for two vehicles require two consecutive available time slots. / 周末两辆车需要预约连续两个可选时段。";
+      if (isCombinedService) {
+        vehicleScheduleHint.textContent = "Combined tire and oil service needs two consecutive weekend slots; a 4 PM start may finish at 6 PM. / 换胎和换机油组合服务需要预约周末连续两个时段；下午4点开始的预约可能在下午6点结束。";
+      } else if (requiresTwoSlots) {
+        vehicleScheduleHint.textContent = "Weekend appointments for two vehicles require two consecutive available time slots. / 周末两辆车需要预约连续两个可选时段。";
+      }
       if (selectedDate) renderTimes(selectedDate);
     }
     function updateOilVinField() {
@@ -995,10 +995,11 @@
     }
 
     setInterval(() => {
-      if (selectedDate && formatDate(selectedDate) === formatDate(getServiceToday())) {
-        renderTimes(selectedDate);
-      }
-    }, 60 * 1000);
+      if (selectedDate && !document.hidden) renderTimes(selectedDate);
+    }, 30 * 1000);
+    document.addEventListener("visibilitychange", () => {
+      if (!document.hidden && selectedDate) renderTimes(selectedDate);
+    });
 
     form.addEventListener("submit", async (event) => {
       event.preventDefault();
