@@ -1013,7 +1013,7 @@
         return;
       }
       if (outOfRangeAddress && outOfRangeAddress === homeAddress.value.trim()) {
-        formError.textContent = "This address is outside our maximum service radius (20 km). Please contact us directly. / 该地址超出最大服务半径（20 公里），请直接联系我们。";
+        formError.textContent = "This address is outside our service area. Please contact us directly. / 该地址超出服务范围，请直接联系我们。";
         formError.classList.add("visible");
         return;
       }
@@ -1293,8 +1293,8 @@
     }
 
     // Both services have a $50 base labour rate; distance surcharges are the same.
-    // ≤10 km $50; 10–15 km +$10; 15–20 km +$20; >20 km not bookable.
-    const MAX_SERVICE_KM = 20;
+    // ≤10 km $50; 10–15 km +$10; >15 km not bookable.
+    const MAX_SERVICE_KM = 15;
     let outOfRangeAddress = "";
 
     function showDistance(km) {
@@ -1303,16 +1303,13 @@
       if (km <= SURCHARGE_KM) {
         showBadge("nearby",
           `${icons.check} <span>Within 10 km: tire swap <strong>$50</strong>; oil change labour <strong>$50</strong> / 10 公里内：换胎 <strong>$50</strong>；换机油人工 <strong>$50</strong></span>`);
-      } else if (km <= 15) {
-        showBadge("far",
-          `${icons.warning} <span><strong>${kmStr} km</strong> — one <strong>+$10</strong> travel surcharge per visit / 本次上门加收一次 <strong>+$10</strong> 远程费</span>`);
       } else if (km <= MAX_SERVICE_KM) {
         showBadge("far",
-          `${icons.warning} <span><strong>${kmStr} km</strong> — one <strong>+$20</strong> travel surcharge per visit / 本次上门加收一次 <strong>+$20</strong> 远程费</span>`);
+          `${icons.warning} <span><strong>${kmStr} km</strong> — one <strong>+$10</strong> travel surcharge per visit / 本次上门加收一次 <strong>+$10</strong> 远程费</span>`);
       } else {
         outOfRangeAddress = homeAddress.value.trim();
         showBadge("far",
-          `${icons.warning} <span><strong>${kmStr} km</strong> — outside our maximum service radius (20 km). Please contact us directly for special arrangements. / 超出最大服务半径（20 公里），请直接联系我们沟通。</span>`);
+          `${icons.warning} <span>Outside our service area. Please contact us directly for special arrangements. / 超出服务范围，请直接联系我们沟通。</span>`);
       }
     }
 
