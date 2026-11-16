@@ -931,7 +931,6 @@
       const isTireChange = tireServiceOption.checked;
       const isOilChange = oilServiceOption.checked;
       const isCombinedService = isTireChange && isOilChange;
-      const requiresTwoSlots = isCombinedService || (isTireChange && vehicleCount === 2);
       combinedServiceNotice.hidden = !isCombinedService;
       updateVehiclePriceNote();
       updateVehiclePriceNote("2");
@@ -959,12 +958,7 @@
         vehicleCard2.setAttribute("aria-hidden", "true");
         vehicleCard2.querySelectorAll("input, select").forEach((field) => { field.disabled = true; });
       }
-      vehicleScheduleHint.hidden = !requiresTwoSlots;
-      if (isCombinedService) {
-        vehicleScheduleHint.textContent = "Combined tire and oil service needs two consecutive weekend slots; a 4 PM start may finish at 6 PM. / 换胎和换机油组合服务需要预约周末连续两个时段；下午4点开始的预约可能在下午6点结束。";
-      } else if (requiresTwoSlots) {
-        vehicleScheduleHint.textContent = "Weekend appointments for two vehicles require two consecutive available time slots. / 周末两辆车需要预约连续两个可选时段。";
-      }
+      vehicleScheduleHint.hidden = !(isTireChange && !isOilChange && vehicleCount === 2);
       if (selectedDate) renderTimes(selectedDate);
     }
     function updateOilVinField() {
