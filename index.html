@@ -335,7 +335,7 @@
         <section aria-labelledby="location-heading">
           <h2 class="section-heading" id="location-heading"><span class="section-number">01</span><span>Address &amp; distance<span class="zh">服务地址与距离</span></span></h2>
           <input type="hidden" name="location" value="home">
-          <p class="address-hint bilingual-copy">Enter your address to calculate distance; a travel fee applies when the billing distance exceeds 10 km.<span class="zh zh-copy">输入地址后自动计算距离；计费距离超过 10 公里加收远程费。</span></p>
+          <p class="address-hint bilingual-copy">Enter your address to auto-calculate distance; a fee may apply over 10 km.<span class="zh zh-copy">输入地址后自动计算距离；超过 10 公里可能收取远程费。</span></p>
           <div class="field address-field" id="home-address-field">
             <div class="ac-wrap">
               <input id="home-address" name="homeAddress" placeholder="Street address / 街道地址" autocomplete="off" role="combobox" aria-expanded="false" aria-controls="address-suggestions" aria-autocomplete="list" required>
@@ -1310,7 +1310,7 @@
 
     /* ── Distance check ─────────────────────────────────────────── */
     const SERVICE_ORIGIN = "5100 Kanata Ave. #9, Kanata, ON K2T 1H5, Canada";
-    const SURCHARGE_KM   = 9.5;
+    const SURCHARGE_KM   = 10;
     const distanceBadge  = document.querySelector("#distance-badge");
     let distanceTimer    = null;
     let lastCheckedAddr  = "";
@@ -1451,19 +1451,19 @@
     }
 
     // Both services have a $50 base labour rate; distance surcharges are the same.
-    // Under 9.5 km: base rate; 9.5–15 km: +$10; over 15 km: not bookable.
+    // ≤10 km $50; 10–15 km +$10; >15 km not bookable.
     const MAX_SERVICE_KM = 15;
     let outOfRangeAddress = "";
 
     function showDistance(km) {
+      const kmStr = km.toFixed(1);
       outOfRangeAddress = "";
-      if (km < SURCHARGE_KM) {
+      if (km <= SURCHARGE_KM) {
         showBadge("nearby",
           `${icons.check} <span>Within 10 km / 10 公里内</span>`);
       } else if (km <= MAX_SERVICE_KM) {
-        const billingKm = Math.max(11, Math.ceil(km));
         showBadge("far",
-          `${icons.warning} <span>Billing distance: <strong>${billingKm} km</strong> — one <strong>+$10</strong> travel surcharge per visit / 计费距离 <strong>${billingKm} 公里</strong>，本次上门加收一次 <strong>+$10</strong> 远程费</span>`);
+          `${icons.warning} <span><strong>${kmStr} km</strong> — one <strong>+$10</strong> travel surcharge per visit / 本次上门加收一次 <strong>+$10</strong> 远程费</span>`);
       } else {
         outOfRangeAddress = homeAddress.value.trim();
         showBadge("far",
@@ -1611,7 +1611,7 @@
 
         const km = route.distanceMeters / 1000;
         // 如果打字途中且地址还比较短，为了防止误解，不立刻吓唬用户加收远程费
-        if (km >= SURCHARGE_KM && !isFinal && words.length < 3) {
+        if (km > SURCHARGE_KM && !isFinal && words.length < 3) {
           distanceBadge.className = "distance-badge";
           return;
         }
