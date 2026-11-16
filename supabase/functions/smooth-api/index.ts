@@ -13,6 +13,9 @@ type AppointmentRecord = {
   service_type: string | null;
   oil_vin: string | null;
   oil_materials: string | null;
+  fee_vehicle_1_status?: "standard" | "surcharge" | "review" | null;
+  fee_vehicle_2_status?: "standard" | "surcharge" | "review" | null;
+  fee_distance_km?: number | string | null;
   location_type: string;
   service_address: string;
   customer_name: string;
@@ -122,6 +125,32 @@ Deno.serve(async (request: Request) => {
         : "Customer provided",
     });
   }
+
+  function vehicleFee(status: AppointmentRecord["fee_vehicle_1_status"]): string {
+    if (status === "standard") return "No vehicle surcharge";
+    if (status === "surcharge") {
+      return isCombinedService
+        ? "+$20 ($10 tire swap + $10 oil change)"
+        : "+$10";
+    }
+    return "Vehicle surcharge requires confirmation";
+  }
+
+  emailDetails.push({ label: "Vehicle surcharge", value: vehicleFee(appointment.fee_vehicle_1_status) });
+  if (secondVehicle) {
+    emailDetails.push({ label: "Vehicle 2 surcharge", value: vehicleFee(appointment.fee_vehicle_2_status) });
+  }
+  const rawDistance = appointment.fee_distance_km;
+  const distance = typeof rawDistance === "number"
+    ? rawDistance
+    : typeof rawDistance === "string" && rawDistance.trim() !== "" ? Number(rawDistance) : NaN;
+  emailDetails.push({
+    label: "Driving distance / travel fee",
+    value: Number.isFinite(distance) && distance >= 0 && distance <= 15
+      ? `${distance.toFixed(1)} km — ${distance > 10 ? "+$10 travel fee" : "no travel fee"}`
+      : "Distance and travel fee require confirmation",
+  });
+  emailDetails.push({ label: "Fee details", value: "Reported by the booking page; please confirm before the appointment." });
 
   const emailLines = [
     "NEW SERVICE APPOINTMENT",

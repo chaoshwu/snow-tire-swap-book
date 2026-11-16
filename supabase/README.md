@@ -28,13 +28,19 @@ select cron.schedule(
 
 Run `select public.archive_past_appointments();` once after installing the updated schema to archive any history that already exists.
 
+This checks once per day at 00:15 in the database timezone. The function itself uses `America/Toronto` time when deciding which appointments are past. Historical rows remain available through `public.archived_appointments` for analysis.
+
 ### Combined tire and oil appointments
 
-For an existing project, run `supabase/migrations/20261109_combined_service_bookings.sql` in the Supabase SQL Editor before publishing the updated booking page. It adds the combined service type and `create_appointment_v4`, which reserves two consecutive weekend slots for one vehicle. A combined booking may start at 4:00 PM and finish at 6:00 PM; standalone tire and oil bookings keep their current scheduling rules.
+Run `supabase/migrations/20261109_combined_service_bookings.sql` in the Supabase SQL Editor after `schema.sql` and before publishing the updated booking page. It adds the combined service type and `create_appointment_v4`, which reserves two consecutive weekend slots for one vehicle. A combined booking may start at 4:00 PM and finish at 6:00 PM; standalone tire and oil bookings keep their current scheduling rules.
 
 Deploy the updated `smooth-api` function after the database migration so shop notification emails include the selected services and oil details. The booking page continues to use the current service-specific form details when one service is selected, and shows both sets of details when both are selected.
 
-This checks once per day at 00:15 in the database timezone. The function itself uses `America/Toronto` time when deciding which appointments are past. Historical rows remain available through `public.archived_appointments` for analysis.
+### Fee details in notification emails
+
+Run `supabase/migrations/20261115_booking_fee_notifications.sql` in the SQL Editor **after** the combined-service migration. Deploy the updated `smooth-api` Edge Function next, then publish the updated booking page. The new page requires `create_appointment_v5`; publishing it before the migration will prevent bookings.
+
+The notification includes the per-vehicle surcharge and driving distance/travel fee reported by the booking page. Unknown classifications or distances are marked for confirmation, and older bookings without fee details are not treated as having no surcharge. These values come from the browser and must be confirmed by the shop; they are not server-verified prices or payments. Existing bookings are not modified or backfilled.
 
 ## 3. Connect the page
 

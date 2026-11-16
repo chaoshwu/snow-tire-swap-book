@@ -782,8 +782,8 @@
 
     function vehicleSurchargeMessage(status) {
       if (status === "surcharge") {
-        if (tireServiceOption.checked && oilServiceOption.checked) return "SUV/MPV surcharge: +$20 ($10 per service) / 中大型 SUV/MPV 加 $20（每项 $10）";
-        return "SUV/MPV surcharge: +$10 / 中大型 SUV/MPV 加 $10";
+        if (tireServiceOption.checked && oilServiceOption.checked) return "Larger SUV or minivan: +$20 ($10 per service) / 中大型 SUV 或 MPV 加 $20（每项 $10）";
+        return "Larger SUV or minivan: +$10 / 中大型 SUV 或 MPV 加 $10";
       }
       if (status === "review") return "Vehicle eligibility and any surcharge require confirmation / 是否提供服务及加价需确认";
       if (status === "unsupported") return "Pickup trucks and commercial vans are not serviced / 暂不提供皮卡及商业厢式车服务";
@@ -1224,7 +1224,7 @@
       }).filter((note) => note.text);
       const customerEmail = String(data.get("customerEmail") || "").trim();
 
-      const { error } = await supabaseClient.rpc("create_appointment_v4", {
+      const { error } = await supabaseClient.rpc("create_appointment_v5", {
         p_appointment_date: formatDate(selectedDate),
         p_appointment_time: selectedTime,
         p_vehicle_year: vehicle1.year,
@@ -1243,7 +1243,10 @@
         p_customer_phone: data.get("customerPhone"),
         p_service_type: serviceType,
         p_oil_vin: oilVin || null,
-        p_oil_materials: oilMaterials || null
+        p_oil_materials: oilMaterials || null,
+        p_fee_vehicle_1_status: vehicleSurchargeStatus(data.get("makeChoice"), data.get("modelChoice")),
+        p_fee_vehicle_2_status: vehicle2 ? vehicleSurchargeStatus(data.get("makeChoice2"), data.get("modelChoice2")) : null,
+        p_fee_distance_km: checkedDistance && checkedDistance.address === String(address).trim() ? checkedDistance.km : null
       });
 
       if (error) {
@@ -1338,6 +1341,7 @@
     let acIndex = -1;
     let selectedPlaceId = "";
     let selectedText = "";
+    let distanceRequestVersion = 0;
 
     function closeSuggestions() {
       acList.hidden = true;
@@ -1432,6 +1436,9 @@
     }
 
     async function checkPlaceDistance(placeId, text) {
+      const requestVersion = ++distanceRequestVersion;
+      checkedDistance = null;
+      outOfRangeAddress = "";
       const apiKey = (window.MAPS_CONFIG || {}).apiKey;
       showBadge("checking", `${icons.spin} Checking driving distance… / 正在计算驾车距离…`);
       try {
@@ -1440,13 +1447,14 @@
           headers: { "Content-Type": "application/json", "X-Goog-Api-Key": apiKey, "X-Goog-FieldMask": "routes.distanceMeters" },
           body: JSON.stringify({ origin: { address: SERVICE_ORIGIN }, destination: { placeId }, travelMode: "DRIVE" })
         });
-        if (selectedPlaceId !== placeId || homeAddress.value !== text) return;
+        if (requestVersion !== distanceRequestVersion || selectedPlaceId !== placeId || homeAddress.value !== text) return;
         const data = res.ok ? await res.json() : null;
+        if (requestVersion !== distanceRequestVersion || selectedPlaceId !== placeId || homeAddress.value !== text) return;
         const route = data && data.routes && data.routes[0];
         if (!route || typeof route.distanceMeters !== "number") { showUnknown(); return; }
         showDistance(route.distanceMeters / 1000);
       } catch (e) {
-        showUnknown();
+        if (requestVersion === distanceRequestVersion && selectedPlaceId === placeId && homeAddress.value === text) showUnknown();
       }
     }
 
@@ -1454,10 +1462,12 @@
     // ≤10 km $50; 10–15 km +$10; >15 km not bookable.
     const MAX_SERVICE_KM = 15;
     let outOfRangeAddress = "";
+    let checkedDistance = null;
 
     function showDistance(km) {
       const kmStr = km.toFixed(1);
       outOfRangeAddress = "";
+      checkedDistance = { address: homeAddress.value.trim(), km };
       if (km <= SURCHARGE_KM) {
         showBadge("nearby",
           `${icons.check} <span>Within 10 km / 10 公里内</span>`);
@@ -1480,6 +1490,9 @@
     });
 
     homeAddress.addEventListener("input", () => {
+      distanceRequestVersion++;
+      checkedDistance = null;
+      outOfRangeAddress = "";
       clearTimeout(distanceTimer);
       clearTimeout(acTimer);
       const val = homeAddress.value.trim();
@@ -1540,6 +1553,9 @@
 
     async function checkDrivingDistance(rawAddress, isFinal = false) {
       if (rawAddress === lastCheckedAddr && distanceBadge.classList.contains("visible")) return;
+      const requestVersion = ++distanceRequestVersion;
+      checkedDistance = null;
+      outOfRangeAddress = "";
       const apiKey = (window.MAPS_CONFIG || {}).apiKey;
       if (!apiKey || apiKey === "YOUR_GOOGLE_MAPS_API_KEY") return;
 
@@ -1578,14 +1594,14 @@
           })
         });
 
-        if (homeAddress.value.trim() !== rawAddress) return;
+        if (requestVersion !== distanceRequestVersion || homeAddress.value.trim() !== rawAddress) return;
         if (!response.ok) {
           if (isFinal) showUnknown(); else distanceBadge.className = "distance-badge";
           return;
         }
 
         const data = await response.json();
-        if (homeAddress.value.trim() !== rawAddress) return; // 输入已变化，丢弃过期结果
+        if (requestVersion !== distanceRequestVersion || homeAddress.value.trim() !== rawAddress) return;
         const route = data.routes && data.routes[0];
         if (!route || typeof route.distanceMeters !== "number") {
           if (isFinal) showUnknown(); else distanceBadge.className = "distance-badge";
@@ -1617,11 +1633,14 @@
         }
         showDistance(km);
       } catch (err) {
-        if (isFinal) showUnknown(); else distanceBadge.className = "distance-badge";
+        if (requestVersion === distanceRequestVersion && homeAddress.value.trim() === rawAddress) {
+          if (isFinal) showUnknown(); else distanceBadge.className = "distance-badge";
+        }
       }
     }
 
     function showUnknown() {
+      checkedDistance = null;
       showBadge("unknown",
         `${icons.help} Address not recognized — distance will be confirmed after booking / 地址无法识别，预约后我们将确认距离`);
     }
