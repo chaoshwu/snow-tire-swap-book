@@ -1478,7 +1478,7 @@
           `${icons.check} <span>Within 10 km / 10 公里内</span>`);
       } else if (km <= MAX_SERVICE_KM) {
         showBadge("far",
-          `${icons.warning} <span><strong>${kmStr} km</strong> — one <strong>+$10</strong> travel surcharge per visit / 本次上门加收一次 <strong>+$10</strong> 远程费</span>`);
+          `${icons.warning} <span><strong>${kmStr} km</strong> — <strong>+$10</strong> travel surcharge / 加收 <strong>+$10</strong> 远程费</span>`);
       } else {
         outOfRangeAddress = homeAddress.value.trim();
         showBadge("far",
