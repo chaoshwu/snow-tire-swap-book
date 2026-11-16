@@ -659,6 +659,15 @@
       "RX 350", "RX 350L", "RX 350h", "RX 400h", "RX 450h", "RX 450hL", "RX 450h+", "RX 500h",
       "TX 350", "TX 500h", "TX 550h+"
     ];
+    const mercedesStandardModels = [
+      "GLA 250", "GLA 35 AMG", "GLA 45 AMG", "GLB 250", "GLB 35 AMG",
+      "GLC 300", "GLC 350e", "GLC 43 AMG", "GLC 63 AMG"
+    ];
+    const mercedesSurchargeModels = [
+      "G 550", "G 580", "G 63 AMG", "GLE 350", "GLE 400", "GLE 450", "GLE 450e",
+      "GLE 53 AMG", "GLE 580", "GLE 63 AMG", "GLS 450", "GLS 580", "GLS 600 Maybach",
+      "GLS 63 AMG", "EQE SUV", "EQS SUV"
+    ];
     const vehicleModels = {
       Acura: ["ILX", "Integra", "MDX", "RDX", "TLX", "ZDX"],
       Audi: ["A3", "A4", "A5", "A6", "A7", "A8", "Q3", "Q4 e-tron", "Q5", "Q7", "Q8", "e-tron"],
@@ -681,7 +690,7 @@
       Lexus: ["CT", "ES", "GS", "GX", "HS", "IS", "LC", "LS", "LX", "NX", "RC", "RX", "RZ", "TX", "UX", ...lexusStandardModels, ...lexusSurchargeModels],
       Lincoln: ["Aviator", "Continental", "Corsair", "MKC", "MKZ", "Nautilus", "Navigator"],
       Mazda: ["CX-3", "CX-30", "CX-5", "CX-50", "CX-7", "CX-70", "CX-9", "CX-90", "Mazda2", "Mazda3", "Mazda5", "Mazda6", "MX-5 Miata"],
-      "Mercedes-Benz": ["A-Class", "B-Class", "C-Class", "CLA", "CLE", "CLS", "E-Class", "EQA", "EQB", "EQE", "EQS", "G-Class", "GLA", "GLB", "GLC", "GLE", "GLS", "S-Class", "SL"],
+      "Mercedes-Benz": ["A-Class", "B-Class", "C-Class", "CLA", "CLE", "CLS", "E-Class", "EQA", "EQB", "EQE", "EQS", "G-Class", "GLA", "GLB", "GLC", "GLE", "GLS", "S-Class", "SL", ...mercedesStandardModels, ...mercedesSurchargeModels],
       MINI: ["Aceman", "Clubman", "Cooper", "Cooper SE", "Countryman", "Convertible", "Hardtop 2 Door", "Hardtop 4 Door", "Paceman"],
       Mitsubishi: ["Eclipse Cross", "Galant", "Mirage", "Outlander", "Outlander PHEV", "RVR"],
       Nissan: ["370Z", "Altima", "Armada", "Ariya", "Frontier", "GT-R", "Juke", "Kicks", "Leaf", "Maxima", "Murano", "Pathfinder", "Qashqai", "Rogue", "Sentra", "Titan", "Versa"],
@@ -716,7 +725,7 @@
       Lexus: ["GX", "LX", "RX", "TX", ...lexusSurchargeModels],
       Lincoln: ["Aviator", "Nautilus", "Navigator"],
       Mazda: ["CX-7", "CX-70", "CX-9", "CX-90", "Mazda5"],
-      "Mercedes-Benz": ["G-Class", "GLE", "GLS"],
+      "Mercedes-Benz": ["G-Class", "GLE", "GLS", ...mercedesSurchargeModels],
       Nissan: ["Armada", "Murano", "Pathfinder"],
       Porsche: ["Cayenne"],
       Subaru: ["Ascent"],
@@ -748,7 +757,7 @@
       Lexus: ["CT", "ES", "GS", "HS", "IS", "LC", "LS", "NX", "RC", "RZ", "UX", ...lexusStandardModels],
       Lincoln: ["Continental", "Corsair", "MKC", "MKZ"],
       Mazda: ["CX-3", "CX-30", "CX-5", "CX-50", "Mazda2", "Mazda3", "Mazda6", "MX-5 Miata"],
-      "Mercedes-Benz": ["A-Class", "B-Class", "C-Class", "CLA", "CLE", "CLS", "E-Class", "EQA", "EQB", "GLA", "GLB", "GLC", "S-Class", "SL"],
+      "Mercedes-Benz": ["A-Class", "B-Class", "C-Class", "CLA", "CLE", "CLS", "E-Class", "EQA", "EQB", "GLA", "GLB", "GLC", "S-Class", "SL", ...mercedesStandardModels],
       MINI: ["Aceman", "Clubman", "Cooper", "Cooper SE", "Countryman", "Convertible", "Hardtop 2 Door", "Hardtop 4 Door", "Paceman"],
       Mitsubishi: ["Eclipse Cross", "Galant", "Mirage", "Outlander", "Outlander PHEV", "RVR"],
       Nissan: ["370Z", "Altima", "Ariya", "GT-R", "Juke", "Kicks", "Leaf", "Maxima", "Qashqai", "Rogue", "Sentra", "Versa"],
