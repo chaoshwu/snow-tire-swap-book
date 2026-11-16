@@ -111,6 +111,8 @@
     .vehicle-card { padding: 14px; border: 1px solid var(--line); border-radius: 5px; background: #fff; }
     .vehicle-card-title { margin: 0 0 12px; color: var(--green-dark); font-size: 12px; font-weight: 700; }
     .vehicle-card-title .zh { margin-left: 5px; }
+    .vehicle-price-note { margin: 10px 0 0; color: var(--green-dark); font-size: 12px; line-height: 1.5; }
+    .vehicle-price-note[hidden] { display: none; }
     .secondary-vehicle { display: none; }
     .secondary-vehicle.visible { display: block; }
     .schedule-hint { margin: 10px 0 0; color: var(--muted); font-size: 11px; line-height: 1.5; }
@@ -315,11 +317,11 @@
         <h1 id="page-title">Tire &amp; oil changes, on your time.<span class="zh zh-copy">换胎、换机油，按你的时间安排</span></h1>
         <div class="service-prices" aria-label="Service prices / 服务价格">
           <div class="price-callout" aria-label="Tire swap on-rim only price / 限带轮毂换胎价格">
-            <span>Tire swap · On-rim only<span class="zh">换胎 · 限带轮毂</span></span>
+            <span>Tire swap · Base price<span class="zh">换胎基础价 · 限带轮毂</span></span>
             <strong>$50</strong>
           </div>
           <div class="price-callout" aria-label="Oil change labor price / 换机油人工费">
-            <span>Oil change · labour<span class="zh">换机油 · 人工费</span></span>
+            <span>Oil change · base labour<span class="zh">换机油 · 基础人工费</span></span>
             <strong>$50</strong>
           </div>
         </div>
@@ -333,7 +335,7 @@
         <section aria-labelledby="location-heading">
           <h2 class="section-heading" id="location-heading"><span class="section-number">01</span><span>Address &amp; distance<span class="zh">服务地址与距离</span></span></h2>
           <input type="hidden" name="location" value="home">
-          <p class="address-hint bilingual-copy">Enter your address to auto-calculate distance; a fee may apply over 10 km.<span class="zh zh-copy">输入地址后自动计算距离；超过 10 公里可能收取远程费。</span></p>
+          <p class="address-hint bilingual-copy">Enter your address to calculate driving distance; a $10 travel fee applies from 9.5 km.<span class="zh zh-copy">输入地址后计算驾车距离；实际距离达到 9.5 公里加收 $10 远程费。</span></p>
           <div class="field address-field" id="home-address-field">
             <div class="ac-wrap">
               <input id="home-address" name="homeAddress" placeholder="Street address / 街道地址" autocomplete="off" role="combobox" aria-expanded="false" aria-controls="address-suggestions" aria-autocomplete="list" required>
@@ -409,10 +411,12 @@
               <input id="vehicle-trim" name="trim" placeholder="Trim / 配置" autocomplete="off" aria-label="Trim / 配置">
             </div>
           </div>
+          <p class="vehicle-price-note" id="vehicle-price-note" role="status" hidden></p>
           </div>
           <div class="vehicle-card secondary-vehicle" id="vehicle-card-2" aria-hidden="true">
             <p class="vehicle-card-title">Vehicle 2 <span class="zh">车辆 2</span></p>
             <div class="field-grid"></div>
+            <p class="vehicle-price-note" id="vehicle-2-price-note" role="status" hidden></p>
           </div>
           </div>
           <div class="oil-options" id="oil-options" hidden>
@@ -505,7 +509,7 @@
               <li><strong>Hub cleaning &amp; anti-seize</strong><span class="zh">轮毂接触面除锈清洁并涂抗卡死剂</span></li>
             </ul>
             <ul id="included-oil-list" hidden>
-              <li><strong>Oil &amp; filter replacement: $50 labour</strong><span class="zh">更换机油及滤芯：人工费$50</span></li>
+              <li><strong>Oil &amp; filter replacement: $50 base labour</strong><span class="zh">更换机油及滤芯：基础人工费 $50</span></li>
               <li><strong>Sourcing &amp; pickup fee: +$20 (parts billed at receipt cost)</strong><span class="zh">+$20 代购跑腿费（零件费用按小票实报实销）</span></li>
               <li><strong>Used oil is collected for proper recycling</strong><span class="zh">旧机油将统一回收处理</span></li>
             </ul>
@@ -627,40 +631,173 @@
 
     const weekdayNames = ["Sun / 周日", "Mon / 周一", "Tue / 周二", "Wed / 周三", "Thu / 周四", "Fri / 周五", "Sat / 周六"];
     const monthNames = ["Jan / 1月", "Feb / 2月", "Mar / 3月", "Apr / 4月", "May / 5月", "Jun / 6月", "Jul / 7月", "Aug / 8月", "Sep / 9月", "Oct / 10月", "Nov / 11月", "Dec / 12月"];
+    const bmwStandardModels = [
+      "320i", "328i", "330i", "335i", "340i", "M340i",
+      "228i", "230i", "M235i", "M240i", "428i", "430i", "435i", "440i", "M440i",
+      "528i", "530i", "535i", "540i", "550i", "M550i",
+      "740i", "750i", "840i", "M850i",
+      "X1 xDrive28i", "X1 M35i", "X2 xDrive28i", "X2 M35i",
+      "X3 xDrive28i", "X3 xDrive30i", "X3 30 xDrive", "X3 M40i", "X3 M50",
+      "X4 xDrive28i", "X4 xDrive30i", "X4 M40i"
+    ];
+    const bmwSurchargeModels = [
+      "X5 xDrive35i", "X5 xDrive40i", "X5 xDrive45e", "X5 xDrive50e", "X5 M50i", "X5 M60i",
+      "X6 xDrive35i", "X6 xDrive40i", "X6 M50i", "X6 M60i",
+      "X7 xDrive40i", "X7 M50i", "X7 M60i"
+    ];
+    const lexusStandardModels = [
+      "CT 200h", "ES 250", "ES 300h", "ES 350", "GS 250", "GS 300", "GS 350", "GS 450h",
+      "HS 250h", "IS 250", "IS 300", "IS 350", "IS 500", "IS F",
+      "LC 500", "LC 500h", "LS 460", "LS 500", "LS 500h", "LS 600h L",
+      "NX 200t", "NX 250", "NX 300", "NX 300h", "NX 350", "NX 350h", "NX 450h+",
+      "RC 300", "RC 350", "RC F", "RZ 300e", "RZ 450e", "RZ 500e", "RZ 550e",
+      "UX 200", "UX 250h", "UX 300h"
+    ];
+    const lexusSurchargeModels = [
+      "GX 460", "GX 470", "GX 550", "LX 570", "LX 600", "LX 700h",
+      "RX 350", "RX 350L", "RX 350h", "RX 400h", "RX 450h", "RX 450hL", "RX 450h+", "RX 500h",
+      "TX 350", "TX 500h", "TX 550h+"
+    ];
     const vehicleModels = {
       Acura: ["ILX", "Integra", "MDX", "RDX", "TLX", "ZDX"],
       Audi: ["A3", "A4", "A5", "A6", "A7", "A8", "Q3", "Q4 e-tron", "Q5", "Q7", "Q8", "e-tron"],
-      BMW: ["1 Series", "2 Series", "3 Series", "4 Series", "5 Series", "7 Series", "8 Series", "X1", "X2", "X3", "X4", "X5", "X6", "X7", "i4", "i5", "i7", "iX"],
-      Buick: ["Enclave", "Encore", "Encore GX", "Envision", "LaCrosse", "Regal"],
+      BMW: ["1 Series", "2 Series", "3 Series", "4 Series", "5 Series", "7 Series", "8 Series", "X1", "X2", "X3", "X4", "X5", "X6", "X7", "i4", "i5", "i7", "iX", ...bmwStandardModels, ...bmwSurchargeModels],
+      Buick: ["Enclave", "Encore", "Encore GX", "Envision", "Envista", "LaCrosse", "Regal"],
       Cadillac: ["CT4", "CT5", "CT6", "Escalade", "LYRIQ", "XT4", "XT5", "XT6"],
-      Chevrolet: ["Blazer", "Bolt EV", "Bolt EUV", "Equinox", "Malibu", "Silverado", "Suburban", "Tahoe", "Trailblazer", "Traverse", "Trax"],
+      Chevrolet: ["Blazer", "Blazer EV", "Bolt EV", "Bolt EUV", "Cruze", "Equinox", "Equinox EV", "Impala", "Malibu", "Silverado", "Sonic", "Spark", "Suburban", "Tahoe", "Trailblazer", "Traverse", "Trax"],
       Chrysler: ["200", "300", "Pacifica", "Pacifica Hybrid", "Voyager"],
       Dodge: ["Challenger", "Charger", "Durango", "Hornet", "Journey", "Grand Caravan"],
-      Ford: ["Bronco", "Bronco Sport", "Edge", "Escape", "Expedition", "Explorer", "F-150", "F-250", "Maverick", "Mustang", "Mustang Mach-E", "Ranger", "Transit"],
+      Ford: ["Bronco", "Bronco Sport", "C-Max", "Edge", "Escape", "Expedition", "Explorer", "F-150", "F-250", "Fiesta", "Focus", "Fusion", "Maverick", "Mustang", "Mustang Mach-E", "Ranger", "Taurus", "Transit"],
       Genesis: ["G70", "G80", "G90", "GV60", "GV70", "GV80"],
       GMC: ["Acadia", "Canyon", "Hummer EV", "Sierra", "Terrain", "Yukon", "Yukon XL"],
-      Honda: ["Accord", "Civic", "Clarity", "CR-V", "HR-V", "Insight", "Odyssey", "Passport", "Pilot", "Ridgeline"],
-      Hyundai: ["Elantra", "Ioniq 5", "Ioniq 6", "Kona", "Nexo", "Palisade", "Santa Cruz", "Santa Fe", "Sonata", "Tucson", "Venue"],
+      Honda: ["Accord", "Civic", "Clarity", "CR-V", "Fit", "HR-V", "Insight", "Odyssey", "Passport", "Pilot", "Prologue", "Ridgeline"],
+      Hyundai: ["Accent", "Elantra", "Ioniq", "Ioniq 5", "Ioniq 6", "Ioniq 9", "Kona", "Nexo", "Palisade", "Santa Cruz", "Santa Fe", "Sonata", "Tucson", "Veloster", "Venue"],
       Infiniti: ["Q30", "Q50", "Q60", "QX30", "QX50", "QX55", "QX60", "QX80"],
       Jaguar: ["E-PACE", "F-PACE", "F-TYPE", "I-PACE", "XE", "XF", "XJ"],
       Jeep: ["Cherokee", "Compass", "Gladiator", "Grand Cherokee", "Grand Cherokee 4xe", "Renegade", "Wrangler", "Wrangler 4xe"],
-      Kia: ["Carnival", "EV6", "EV9", "Forte", "K5", "Niro", "Seltos", "Sorento", "Soul", "Sportage", "Telluride"],
+      Kia: ["Carnival", "EV4", "EV5", "EV6", "EV9", "Forte", "K4", "K5", "Niro", "Seltos", "Sorento", "Soul", "Sportage", "Telluride"],
       "Land Rover": ["Defender", "Discovery", "Discovery Sport", "Range Rover", "Range Rover Evoque", "Range Rover Sport", "Range Rover Velar"],
-      Lexus: ["ES", "GX", "IS", "LC", "LS", "LX", "NX", "RC", "RX", "RZ", "TX", "UX"],
+      Lexus: ["CT", "ES", "GS", "GX", "HS", "IS", "LC", "LS", "LX", "NX", "RC", "RX", "RZ", "TX", "UX", ...lexusStandardModels, ...lexusSurchargeModels],
       Lincoln: ["Aviator", "Continental", "Corsair", "MKC", "MKZ", "Nautilus", "Navigator"],
-      Mazda: ["CX-3", "CX-30", "CX-5", "CX-50", "CX-9", "CX-90", "Mazda2", "Mazda3", "Mazda5", "Mazda6", "MX-5 Miata"],
+      Mazda: ["CX-3", "CX-30", "CX-5", "CX-50", "CX-7", "CX-70", "CX-9", "CX-90", "Mazda2", "Mazda3", "Mazda5", "Mazda6", "MX-5 Miata"],
       "Mercedes-Benz": ["A-Class", "B-Class", "C-Class", "CLA", "CLE", "CLS", "E-Class", "EQA", "EQB", "EQE", "EQS", "G-Class", "GLA", "GLB", "GLC", "GLE", "GLS", "S-Class", "SL"],
       MINI: ["Aceman", "Clubman", "Cooper", "Cooper SE", "Countryman", "Convertible", "Hardtop 2 Door", "Hardtop 4 Door", "Paceman"],
       Mitsubishi: ["Eclipse Cross", "Galant", "Mirage", "Outlander", "Outlander PHEV", "RVR"],
-      Nissan: ["370Z", "Altima", "Armada", "Ariya", "Frontier", "GT-R", "Kicks", "Leaf", "Maxima", "Murano", "Pathfinder", "Rogue", "Sentra", "Titan", "Versa"],
+      Nissan: ["370Z", "Altima", "Armada", "Ariya", "Frontier", "GT-R", "Juke", "Kicks", "Leaf", "Maxima", "Murano", "Pathfinder", "Qashqai", "Rogue", "Sentra", "Titan", "Versa"],
       Porsche: ["718 Cayman", "718 Boxster", "911", "Cayenne", "Macan", "Panamera", "Taycan"],
       Ram: ["1500", "1500 Classic", "2500", "3500", "ProMaster"],
       Subaru: ["Ascent", "BRZ", "Crosstrek", "Forester", "Impreza", "Legacy", "Outback", "Solterra", "WRX"],
       Tesla: ["Model 3", "Model S", "Model X", "Model Y", "Cybertruck"],
-      Toyota: ["4Runner", "Avalon", "bZ4X", "Camry", "Corolla", "Crown", "GR86", "Grand Highlander", "Highlander", "Land Cruiser", "Mirai", "Prius", "RAV4", "Sequoia", "Sienna", "Tacoma", "Tundra", "Venza"],
+      Toyota: ["4Runner", "Avalon", "bZ4X", "C-HR", "Camry", "Corolla", "Corolla Cross", "Crown", "Crown Signia", "GR86", "Grand Highlander", "Highlander", "Land Cruiser", "Matrix", "Mirai", "Prius", "RAV4", "Sequoia", "Sienna", "Tacoma", "Tundra", "Venza", "Yaris"],
       Volkswagen: ["Arteon", "Atlas", "Atlas Cross Sport", "Golf", "GTI", "ID.4", "ID. Buzz", "Jetta", "Passat", "Taos", "Tiguan"],
       Volvo: ["C40 Recharge", "S60", "S90", "V60", "V90", "XC40", "XC60", "XC90"]
     };
+
+    const surchargeVehicleModels = {
+      Acura: ["MDX", "ZDX"],
+      Audi: ["Q7", "Q8", "e-tron"],
+      BMW: ["X5", "X6", "X7", "iX", ...bmwSurchargeModels],
+      Buick: ["Enclave"],
+      Cadillac: ["Escalade", "LYRIQ", "XT5", "XT6"],
+      Chevrolet: ["Blazer", "Blazer EV", "Suburban", "Tahoe", "Traverse"],
+      Chrysler: ["Pacifica", "Pacifica Hybrid", "Voyager"],
+      Dodge: ["Durango", "Journey", "Grand Caravan"],
+      Ford: ["Edge", "Expedition", "Explorer"],
+      Genesis: ["GV80"],
+      GMC: ["Acadia", "Yukon", "Yukon XL"],
+      Honda: ["Odyssey", "Passport", "Pilot", "Prologue"],
+      Hyundai: ["Ioniq 9", "Palisade", "Santa Fe"],
+      Infiniti: ["QX60", "QX80"],
+      Jaguar: ["F-PACE"],
+      Jeep: ["Grand Cherokee", "Grand Cherokee 4xe"],
+      Kia: ["Carnival", "EV9", "Sorento", "Telluride"],
+      "Land Rover": ["Discovery", "Range Rover", "Range Rover Sport", "Range Rover Velar"],
+      Lexus: ["GX", "LX", "RX", "TX", ...lexusSurchargeModels],
+      Lincoln: ["Aviator", "Nautilus", "Navigator"],
+      Mazda: ["CX-7", "CX-70", "CX-9", "CX-90", "Mazda5"],
+      "Mercedes-Benz": ["G-Class", "GLE", "GLS"],
+      Nissan: ["Armada", "Murano", "Pathfinder"],
+      Porsche: ["Cayenne"],
+      Subaru: ["Ascent"],
+      Tesla: ["Model X"],
+      Toyota: ["4Runner", "Crown Signia", "Grand Highlander", "Highlander", "Land Cruiser", "Sequoia", "Sienna"],
+      Volkswagen: ["Atlas", "Atlas Cross Sport", "ID. Buzz"],
+      Volvo: ["XC90"]
+    };
+
+    const standardVehicleModels = {
+      Acura: ["ILX", "Integra", "RDX", "TLX"],
+      Audi: ["A3", "A4", "A5", "A6", "A7", "A8", "Q3", "Q4 e-tron", "Q5"],
+      BMW: ["1 Series", "2 Series", "3 Series", "4 Series", "5 Series", "7 Series", "8 Series", "X1", "X2", "X3", "X4", "i4", "i5", "i7", ...bmwStandardModels],
+      Buick: ["Encore", "Encore GX", "Envision", "Envista", "LaCrosse", "Regal"],
+      Cadillac: ["CT4", "CT5", "CT6", "XT4"],
+      Chevrolet: ["Bolt EV", "Bolt EUV", "Cruze", "Equinox", "Equinox EV", "Impala", "Malibu", "Sonic", "Spark", "Trailblazer", "Trax"],
+      Chrysler: ["200", "300"],
+      Dodge: ["Challenger", "Charger", "Hornet"],
+      Ford: ["Bronco Sport", "C-Max", "Escape", "Fiesta", "Focus", "Fusion", "Mustang", "Mustang Mach-E", "Taurus"],
+      Genesis: ["G70", "G80", "G90", "GV60", "GV70"],
+      GMC: ["Terrain"],
+      Honda: ["Accord", "Civic", "Clarity", "CR-V", "Fit", "HR-V", "Insight"],
+      Hyundai: ["Accent", "Elantra", "Ioniq", "Ioniq 5", "Ioniq 6", "Kona", "Nexo", "Sonata", "Tucson", "Veloster", "Venue"],
+      Infiniti: ["Q30", "Q50", "Q60", "QX30", "QX50", "QX55"],
+      Jaguar: ["E-PACE", "F-TYPE", "I-PACE", "XE", "XF", "XJ"],
+      Jeep: ["Cherokee", "Compass", "Renegade"],
+      Kia: ["EV4", "EV5", "EV6", "Forte", "K4", "K5", "Niro", "Seltos", "Soul", "Sportage"],
+      "Land Rover": ["Discovery Sport", "Range Rover Evoque"],
+      Lexus: ["CT", "ES", "GS", "HS", "IS", "LC", "LS", "NX", "RC", "RZ", "UX", ...lexusStandardModels],
+      Lincoln: ["Continental", "Corsair", "MKC", "MKZ"],
+      Mazda: ["CX-3", "CX-30", "CX-5", "CX-50", "Mazda2", "Mazda3", "Mazda6", "MX-5 Miata"],
+      "Mercedes-Benz": ["A-Class", "B-Class", "C-Class", "CLA", "CLE", "CLS", "E-Class", "EQA", "EQB", "GLA", "GLB", "GLC", "S-Class", "SL"],
+      MINI: ["Aceman", "Clubman", "Cooper", "Cooper SE", "Countryman", "Convertible", "Hardtop 2 Door", "Hardtop 4 Door", "Paceman"],
+      Mitsubishi: ["Eclipse Cross", "Galant", "Mirage", "Outlander", "Outlander PHEV", "RVR"],
+      Nissan: ["370Z", "Altima", "Ariya", "GT-R", "Juke", "Kicks", "Leaf", "Maxima", "Qashqai", "Rogue", "Sentra", "Versa"],
+      Porsche: ["718 Cayman", "718 Boxster", "911", "Macan", "Panamera", "Taycan"],
+      Subaru: ["BRZ", "Crosstrek", "Forester", "Impreza", "Legacy", "Outback", "Solterra", "WRX"],
+      Tesla: ["Model 3", "Model S", "Model Y"],
+      Toyota: ["Avalon", "bZ4X", "C-HR", "Camry", "Corolla", "Corolla Cross", "Crown", "GR86", "Matrix", "Mirai", "Prius", "RAV4", "Venza", "Yaris"],
+      Volkswagen: ["Arteon", "Golf", "GTI", "ID.4", "Jetta", "Passat", "Taos", "Tiguan"],
+      Volvo: ["C40 Recharge", "S60", "S90", "V60", "V90", "XC40", "XC60"]
+    };
+
+    const unsupportedVehicleModels = {
+      Chevrolet: ["Silverado"],
+      Ford: ["F-150", "F-250", "Maverick", "Ranger", "Transit"],
+      GMC: ["Canyon", "Sierra"],
+      Honda: ["Ridgeline"],
+      Hyundai: ["Santa Cruz"],
+      Jeep: ["Gladiator"],
+      Nissan: ["Frontier", "Titan"],
+      Ram: ["1500", "1500 Classic", "2500", "3500", "ProMaster"],
+      Tesla: ["Cybertruck"],
+      Toyota: ["Tacoma", "Tundra"]
+    };
+
+    function vehicleSurchargeStatus(make, model) {
+      if (!make || !model) return null;
+      if ((unsupportedVehicleModels[make] || []).includes(model)) return "unsupported";
+      if ((surchargeVehicleModels[make] || []).includes(model)) return "surcharge";
+      if ((standardVehicleModels[make] || []).includes(model)) return "standard";
+      return "review";
+    }
+
+    function vehicleSurchargeMessage(status) {
+      if (status === "surcharge") {
+        if (tireServiceOption.checked && oilServiceOption.checked) return "SUV/MPV surcharge: +$20 ($10 per service) / 中大型 SUV/MPV 加 $20（每项 $10）";
+        return "SUV/MPV surcharge: +$10 / 中大型 SUV/MPV 加 $10";
+      }
+      if (status === "review") return "Vehicle eligibility and any surcharge require confirmation / 是否提供服务及加价需确认";
+      if (status === "unsupported") return "Pickup trucks and commercial vans are not serviced / 暂不提供皮卡及商业厢式车服务";
+      return "";
+    }
+
+    function updateVehiclePriceNote(suffix = "") {
+      const make = form.querySelector(`[name="makeChoice${suffix}"]`).value;
+      const model = form.querySelector(`[name="modelChoice${suffix}"]`).value;
+      const note = document.querySelector(suffix ? "#vehicle-2-price-note" : "#vehicle-price-note");
+      const status = vehicleSurchargeStatus(make, model);
+      note.textContent = vehicleSurchargeMessage(status);
+      note.hidden = !note.textContent;
+    }
 
     function addYearOptions() {
       const currentYear = today.getFullYear();
@@ -772,6 +909,10 @@
     }
 
     configureSecondVehicle();
+    form.addEventListener("change", (event) => {
+      if (event.target.name === "makeChoice" || event.target.name === "modelChoice") updateVehiclePriceNote();
+      if (event.target.name === "makeChoice2" || event.target.name === "modelChoice2") updateVehiclePriceNote("2");
+    });
     vehicleCountSelect.addEventListener("change", () => {
       const showingSecondVehicle = vehicleCountSelect.value === "2";
       vehicleCount = showingSecondVehicle ? 2 : 1;
@@ -790,6 +931,8 @@
       const isCombinedService = isTireChange && isOilChange;
       const requiresTwoSlots = isCombinedService || (isTireChange && vehicleCount === 2);
       combinedServiceNotice.hidden = !isCombinedService;
+      updateVehiclePriceNote();
+      updateVehiclePriceNote("2");
       vehicleTrimLabel.classList.add("visually-hidden");
       vehicleTrimInput.required = isOilChange;
       vehicleTrimInput.placeholder = isOilChange ? "Trim / 配置（2.5L）" : "Trim / 配置";
@@ -1007,6 +1150,16 @@
         return;
       }
       if (!form.reportValidity()) return;
+      const vehicleSuffixes = ["", ...(tireServiceOption.checked && !oilServiceOption.checked && vehicleCount === 2 ? ["2"] : [])];
+      const unsupportedSuffix = vehicleSuffixes.find((suffix) => vehicleSurchargeStatus(
+        form.querySelector(`[name="makeChoice${suffix}"]`).value,
+        form.querySelector(`[name="modelChoice${suffix}"]`).value
+      ) === "unsupported");
+      if (unsupportedSuffix !== undefined) {
+        formError.textContent = vehicleSurchargeMessage("unsupported");
+        formError.classList.add("visible");
+        return;
+      }
       if (!supabaseClient) {
         formError.textContent = "Supabase is not connected. Add your project URL and anon key first. / Supabase 尚未连接，请先填写项目 URL 和 anon key。";
         formError.classList.add("visible");
@@ -1065,6 +1218,10 @@
       const timeRangeTextEn = `${timeHour % 12 || 12}:00 ${startSuffix}–${endHour % 12 || 12}:00 ${endSuffix}`;
       const timeRangeText = `${timeRangeTextEn} / ${formatChineseTime(timeHour)}–${formatChineseTime(endHour)}`;
       const vehicleText = [vehicle1, vehicle2].filter(Boolean).map((vehicle) => [vehicle.year, vehicle.make, vehicle.model, vehicle.trim].filter(Boolean).join(" "));
+      const vehiclePriceNotes = ["", ...(vehicle2 ? ["2"] : [])].map((suffix) => {
+        const status = vehicleSurchargeStatus(data.get(`makeChoice${suffix}`), data.get(`modelChoice${suffix}`));
+        return { suffix, text: vehicleSurchargeMessage(status) };
+      }).filter((note) => note.text);
       const customerEmail = String(data.get("customerEmail") || "").trim();
 
       const { error } = await supabaseClient.rpc("create_appointment_v4", {
@@ -1119,6 +1276,7 @@
         ...(vehicleText.length <= 1
           ? [`Vehicle / 车辆: ${vehicleText[0]}`]
           : vehicleText.map((text, index) => `Vehicle ${index + 1} / 车辆 ${index + 1}: ${text}`)),
+        ...vehiclePriceNotes.map(({ suffix, text }) => `${vehicle2 ? `Vehicle ${suffix || "1"} / 车辆 ${suffix || "1"}: ` : ""}${text}`),
         ...(hasOilService ? [
           ...(oilVin ? [`VIN: ${oilVin}`] : []),
           `Materials / 材料: ${oilMaterials === "shop" ? "Sourcing & pickup fee +$20; parts billed at receipt cost / +$20代购跑腿费；零件费用按小票实报实销" : "Customer provided / 客户自备"}`,
@@ -1152,7 +1310,7 @@
 
     /* ── Distance check ─────────────────────────────────────────── */
     const SERVICE_ORIGIN = "5100 Kanata Ave. #9, Kanata, ON K2T 1H5, Canada";
-    const SURCHARGE_KM   = 10;
+    const SURCHARGE_KM   = 9.5;
     const distanceBadge  = document.querySelector("#distance-badge");
     let distanceTimer    = null;
     let lastCheckedAddr  = "";
@@ -1293,19 +1451,19 @@
     }
 
     // Both services have a $50 base labour rate; distance surcharges are the same.
-    // ≤10 km $50; 10–15 km +$10; >15 km not bookable.
+    // Under 9.5 km: base rate; 9.5–15 km: +$10; over 15 km: not bookable.
     const MAX_SERVICE_KM = 15;
     let outOfRangeAddress = "";
 
     function showDistance(km) {
-      const kmStr = km.toFixed(1);
       outOfRangeAddress = "";
-      if (km <= SURCHARGE_KM) {
+      if (km < SURCHARGE_KM) {
         showBadge("nearby",
-          `${icons.check} <span>Within 10 km: tire swap <strong>$50</strong>; oil change labour <strong>$50</strong> / 10 公里内：换胎 <strong>$50</strong>；换机油人工 <strong>$50</strong></span>`);
+          `${icons.check} <span>Within 10 km / 10 公里内</span>`);
       } else if (km <= MAX_SERVICE_KM) {
+        const billingKm = Math.max(11, Math.ceil(km));
         showBadge("far",
-          `${icons.warning} <span><strong>${kmStr} km</strong> — one <strong>+$10</strong> travel surcharge per visit / 本次上门加收一次 <strong>+$10</strong> 远程费</span>`);
+          `${icons.warning} <span>Billing distance: <strong>${billingKm} km</strong> — one <strong>+$10</strong> travel surcharge per visit / 计费距离 <strong>${billingKm} 公里</strong>，本次上门加收一次 <strong>+$10</strong> 远程费</span>`);
       } else {
         outOfRangeAddress = homeAddress.value.trim();
         showBadge("far",
@@ -1453,7 +1611,7 @@
 
         const km = route.distanceMeters / 1000;
         // 如果打字途中且地址还比较短，为了防止误解，不立刻吓唬用户加收远程费
-        if (km > SURCHARGE_KM && !isFinal && words.length < 3) {
+        if (km >= SURCHARGE_KM && !isFinal && words.length < 3) {
           distanceBadge.className = "distance-badge";
           return;
         }
