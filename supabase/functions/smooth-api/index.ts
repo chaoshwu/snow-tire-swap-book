@@ -145,10 +145,10 @@ Deno.serve(async (request: Request) => {
     ? rawDistance
     : typeof rawDistance === "string" && rawDistance.trim() !== "" ? Number(rawDistance) : NaN;
   emailDetails.push({
-    label: "Driving distance / travel fee",
+    label: "Travel fee",
     value: Number.isFinite(distance) && distance >= 0 && distance <= 15
-      ? `${distance.toFixed(1)} km — ${distance > 10 ? "+$10 travel fee" : "no travel fee"}`
-      : "Distance and travel fee require confirmation",
+      ? distance > 10 ? "+$10" : "No travel fee"
+      : "Requires confirmation",
   });
   emailDetails.push({ label: "Fee details", value: "Reported by the booking page; please confirm before the appointment." });
 

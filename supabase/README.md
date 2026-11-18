@@ -40,7 +40,7 @@ Deploy the updated `smooth-api` function after the database migration so shop no
 
 Run `supabase/migrations/20261115_booking_fee_notifications.sql` in the SQL Editor **after** the combined-service migration. Deploy the updated `smooth-api` Edge Function next, then publish the updated booking page. The new page requires `create_appointment_v5`; publishing it before the migration will prevent bookings.
 
-The notification includes the per-vehicle surcharge and driving distance/travel fee reported by the booking page. Unknown classifications or distances are marked for confirmation, and older bookings without fee details are not treated as having no surcharge. These values come from the browser and must be confirmed by the shop; they are not server-verified prices or payments. Existing bookings are not modified or backfilled.
+The notification includes the per-vehicle surcharge and whether a travel fee applies, without showing the driving distance. Unknown classifications or fee details are marked for confirmation, and older bookings without fee details are not treated as having no surcharge. These values come from the browser and must be confirmed by the shop; they are not server-verified prices or payments. Existing bookings are not modified or backfilled.
 
 ## 3. Connect the page
 
