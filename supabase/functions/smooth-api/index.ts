@@ -133,7 +133,7 @@ Deno.serve(async (request: Request) => {
         ? "+$20 ($10 tire swap + $10 oil change)"
         : "+$10";
     }
-    return "Vehicle surcharge requires confirmation";
+    return "No vehicle surcharge";
   }
 
   emailDetails.push({ label: "Vehicle surcharge", value: vehicleFee(appointment.fee_vehicle_1_status) });
@@ -146,11 +146,11 @@ Deno.serve(async (request: Request) => {
     : typeof rawDistance === "string" && rawDistance.trim() !== "" ? Number(rawDistance) : NaN;
   emailDetails.push({
     label: "Travel fee",
-    value: Number.isFinite(distance) && distance >= 0 && distance <= 15
-      ? distance > 10 ? "+$10" : "No travel fee"
-      : "Requires confirmation",
+    value: Number.isFinite(distance) && distance > 10 && distance <= 15
+      ? "+$10"
+      : "No travel fee",
   });
-  emailDetails.push({ label: "Fee details", value: "Reported by the booking page; please confirm before the appointment." });
+  emailDetails.push({ label: "Fee details", value: "Based on the vehicle and address details submitted." });
 
   const emailLines = [
     "NEW SERVICE APPOINTMENT",
