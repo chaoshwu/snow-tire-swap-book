@@ -152,6 +152,11 @@
     .service-choice label::before { border-radius: 3px; }
     .service-choice input:checked + label::before { display: grid; place-items: center; color: #fff; content: "✓"; font-size: 11px; font-weight: 700; }
     .service-choice .choice-text { line-height: 1.4; }
+    .cca-addon-choice { margin-top: 8px; }
+    .cca-addon-choice label { min-height: 38px; padding: 7px 10px; color: var(--muted); font-size: 11px; }
+    .cca-addon-choice label::before { border-radius: 3px; }
+    .cca-addon-choice input:checked + label::before { display: grid; place-items: center; color: #fff; content: "✓"; font-size: 11px; font-weight: 700; }
+    .cca-addon-choice .choice-text .zh { font-size: 10px; }
     .oil-options { margin-top: 16px; padding: 14px; border: 1px solid var(--line); border-radius: 5px; background: #fbfbf7; }
     .oil-options[hidden] { display: none; }
     .oil-options-title { margin: 0 0 4px; font-size: 13px; }
@@ -360,6 +365,10 @@
               <input id="service-oil" name="serviceType" type="checkbox" value="oil">
               <label for="service-oil"><span class="choice-text">Oil change<span class="zh">换机油</span></span></label>
             </div>
+          </div>
+          <div class="choice cca-addon-choice">
+            <input id="battery-cca-test" name="batteryCcaTest" type="checkbox">
+            <label for="battery-cca-test"><span class="choice-text">Battery CCA test · +$10 per vehicle<span class="zh">电瓶 CCA 检测 · 每辆车 $10</span></span></label>
           </div>
           <p class="combined-service-notice" id="combined-service-notice" role="status" aria-live="polite" hidden>Both services selected: Tire swap (on-rim) + oil change.<span class="zh">已选择两项服务：换胎（限带轮毂）+ 换机油。</span></p>
         </section>
@@ -1206,6 +1215,7 @@
       const serviceType = isCombinedService ? "both" : hasOilService ? "oil" : "tire";
       const oilVin = hasOilService ? String(data.get("oilVin") || "").trim().toUpperCase() : null;
       const oilMaterials = hasOilService ? data.get("oilMaterials") : null;
+      const batteryCcaTest = data.get("batteryCcaTest") === "on";
       const isWeekend = selectedDate.getDay() === 0 || selectedDate.getDay() === 6;
       const needsSecondSlot = (isCombinedService || vehicle2) && isWeekend;
       const secondTime = needsSecondSlot
@@ -1229,7 +1239,7 @@
       }).filter((note) => note.text);
       const customerEmail = String(data.get("customerEmail") || "").trim();
 
-      const { error } = await supabaseClient.rpc("create_appointment_v5", {
+      const { error } = await supabaseClient.rpc("create_appointment_v6", {
         p_appointment_date: formatDate(selectedDate),
         p_appointment_time: selectedTime,
         p_vehicle_year: vehicle1.year,
@@ -1251,7 +1261,8 @@
         p_oil_materials: oilMaterials || null,
         p_fee_vehicle_1_status: vehicleSurchargeStatus(data.get("makeChoice"), data.get("modelChoice")),
         p_fee_vehicle_2_status: vehicle2 ? vehicleSurchargeStatus(data.get("makeChoice2"), data.get("modelChoice2")) : null,
-        p_fee_distance_km: checkedDistance && checkedDistance.address === String(address).trim() ? checkedDistance.km : null
+        p_fee_distance_km: checkedDistance && checkedDistance.address === String(address).trim() ? checkedDistance.km : null,
+        p_battery_cca_test: batteryCcaTest
       });
 
       if (error) {
@@ -1281,6 +1292,7 @@
         : serviceType === "oil" ? "Oil change / 换机油" : "Tire swap · on-rim / 换胎 · 限带轮毂";
       const details = [
         `Service / 服务: ${serviceLabel}`,
+        `Battery CCA test / 电瓶 CCA 检测: ${batteryCcaTest ? `+$${vehicle2 ? 20 : 10} (${vehicle2 ? "2 vehicles" : "1 vehicle"} × $10)` : "Not selected / 未选择"}`,
         ...(vehicleText.length <= 1
           ? [`Vehicle / 车辆: ${vehicleText[0]}`]
           : vehicleText.map((text, index) => `Vehicle ${index + 1} / 车辆 ${index + 1}: ${text}`)),

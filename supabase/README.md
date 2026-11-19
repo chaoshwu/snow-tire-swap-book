@@ -42,6 +42,10 @@ Run `supabase/migrations/20261115_booking_fee_notifications.sql` in the SQL Edit
 
 The notification includes the per-vehicle surcharge and whether a travel fee applies, without showing the driving distance. Unrecognized vehicles and missing or invalid distance details default to no surcharge; only recognized surcharged vehicles and a reported distance over 10 km show a fee. These values come from the browser and are not server-verified prices or payments. Existing bookings are not modified or backfilled.
 
+### Battery CCA test add-on
+
+For an existing project, run `supabase/migrations/20261119_battery_cca_addon.sql` after the fee-notification migration. Deploy the updated `smooth-api` Edge Function, then publish the updated booking page. The page uses `create_appointment_v6`; publish it only after the migration is installed. The optional CCA test is $10 per vehicle, and the booking email shows whether it was selected and the calculated add-on total. Older bookings default to not selected.
+
 ## 3. Connect the page
 
 In **Project Settings > API** (or the project's API/connect panel), copy the **Project URL** and the **anon / publishable key** into `supabase-config.js`:

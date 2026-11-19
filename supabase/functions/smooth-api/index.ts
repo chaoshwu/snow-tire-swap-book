@@ -16,6 +16,7 @@ type AppointmentRecord = {
   fee_vehicle_1_status?: "standard" | "surcharge" | "review" | null;
   fee_vehicle_2_status?: "standard" | "surcharge" | "review" | null;
   fee_distance_km?: number | string | null;
+  battery_cca_test?: boolean | null;
   location_type: string;
   service_address: string;
   customer_name: string;
@@ -149,6 +150,13 @@ Deno.serve(async (request: Request) => {
     value: Number.isFinite(distance) && distance > 10 && distance <= 15
       ? "+$10"
       : "No travel fee",
+  });
+  const ccaTestVehicleCount = appointment.vehicle_2_year ? 2 : 1;
+  emailDetails.push({
+    label: "Battery CCA test",
+    value: appointment.battery_cca_test
+      ? `+$${ccaTestVehicleCount * 10} (${ccaTestVehicleCount} ${ccaTestVehicleCount === 1 ? "vehicle" : "vehicles"} × $10)`
+      : "Not selected",
   });
   emailDetails.push({ label: "Fee details", value: "Based on the vehicle and address details submitted." });
 
