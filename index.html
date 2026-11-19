@@ -152,11 +152,14 @@
     .service-choice label::before { border-radius: 3px; }
     .service-choice input:checked + label::before { display: grid; place-items: center; color: #fff; content: "✓"; font-size: 11px; font-weight: 700; }
     .service-choice .choice-text { line-height: 1.4; }
-    .cca-addon-choice { margin-top: 8px; }
-    .cca-addon-choice label { min-height: 38px; padding: 7px 10px; color: var(--muted); font-size: 11px; }
-    .cca-addon-choice label::before { border-radius: 3px; }
+    .cca-addon { margin: 10px 0 0 3px; padding-left: 10px; border-left: 2px solid var(--line); }
+    .cca-addon-label { margin: 0 0 2px; color: var(--muted); font-size: 10px; font-weight: 600; }
+    .cca-addon-choice { width: fit-content; }
+    .cca-addon-choice label { min-height: 0; gap: 7px; padding: 2px 0; border-color: transparent; background: transparent; color: var(--muted); font-size: 11px; }
+    .cca-addon-choice label::before { width: 12px; height: 12px; flex-basis: 12px; border-radius: 3px; }
+    .cca-addon-choice input:checked + label { border-color: transparent; background: transparent; color: var(--ink); }
     .cca-addon-choice input:checked + label::before { display: grid; place-items: center; color: #fff; content: "✓"; font-size: 11px; font-weight: 700; }
-    .cca-addon-choice .choice-text .zh { font-size: 10px; }
+    .cca-addon-choice .choice-text .zh { display: inline; margin-left: 4px; font-size: 10px; }
     .oil-options { margin-top: 16px; padding: 14px; border: 1px solid var(--line); border-radius: 5px; background: #fbfbf7; }
     .oil-options[hidden] { display: none; }
     .oil-options-title { margin: 0 0 4px; font-size: 13px; }
@@ -366,9 +369,12 @@
               <label for="service-oil"><span class="choice-text">Oil change<span class="zh">换机油</span></span></label>
             </div>
           </div>
-          <div class="choice cca-addon-choice">
-            <input id="battery-cca-test" name="batteryCcaTest" type="checkbox">
-            <label for="battery-cca-test"><span class="choice-text">Battery CCA test · +$10 per vehicle<span class="zh">电瓶 CCA 检测 · 每辆车 $10</span></span></label>
+          <div class="cca-addon">
+            <p class="cca-addon-label">Add-on / 附加</p>
+            <div class="choice cca-addon-choice">
+              <input id="battery-cca-test" name="batteryCcaTest" type="checkbox">
+              <label for="battery-cca-test"><span class="choice-text">Battery CCA test +$10/vehicle<span class="zh">电瓶 CCA 检测 每车 +$10</span></span></label>
+            </div>
           </div>
           <p class="combined-service-notice" id="combined-service-notice" role="status" aria-live="polite" hidden>Both services selected: Tire swap (on-rim) + oil change.<span class="zh">已选择两项服务：换胎（限带轮毂）+ 换机油。</span></p>
         </section>
