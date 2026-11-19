@@ -84,8 +84,8 @@ Deno.serve(async (request: Request) => {
   const isCombinedService = serviceType === "both";
   const isOilService = serviceType === "oil" || isCombinedService;
   const serviceLabel = isCombinedService
-    ? "Tire swap + oil change"
-    : serviceType === "oil" ? "Oil change" : "Tire swap";
+    ? "Tire swap (on-rim only) + oil change"
+    : serviceType === "oil" ? "Oil change" : "Tire swap (on-rim only)";
   const startHour = Number(time.slice(0, 2));
   const timeLabel = isCombinedService
     ? `${time}–${String(startHour + 2).padStart(2, "0")}:00`

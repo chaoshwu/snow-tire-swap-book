@@ -318,11 +318,11 @@
         <h1 id="page-title">Mobile Tire &amp; Oil Changes, Right at Your Doorstep.<span class="zh zh-copy">上门换胎、换机油，省时省力</span></h1>
         <div class="service-prices" aria-label="Service prices / 服务价格">
           <div class="price-callout" aria-label="Tire swap on-rim only price / 限带轮毂换胎价格">
-            <span>Tire swap · base price<span class="zh">换胎基础价 · 限带轮毂</span></span>
+            <span>Tire swap · on-rim only<span class="zh">换胎 · 限带轮毂</span></span>
             <strong>$50</strong>
           </div>
           <div class="price-callout" aria-label="Oil change labor price / 换机油人工费">
-            <span>Oil change · base labour<span class="zh">换机油 · 基础人工费</span></span>
+            <span>Oil change<span class="zh">换机油</span></span>
             <strong>$50</strong>
           </div>
         </div>
@@ -354,14 +354,14 @@
           <div class="service-choice" role="group" aria-label="Choose one or both services / 选择一项或两项服务">
             <div class="choice">
               <input id="service-tire" name="serviceType" type="checkbox" value="tire">
-              <label for="service-tire"><span class="choice-text">Seasonal tire swap<span class="zh">季节换胎</span></span></label>
+              <label for="service-tire"><span class="choice-text">Seasonal tire swap (on-rim only)<span class="zh">季节换胎（限带轮毂）</span></span></label>
             </div>
             <div class="choice">
               <input id="service-oil" name="serviceType" type="checkbox" value="oil">
               <label for="service-oil"><span class="choice-text">Oil change<span class="zh">换机油</span></span></label>
             </div>
           </div>
-          <p class="combined-service-notice" id="combined-service-notice" role="status" aria-live="polite" hidden>Both services selected: Tire swap + oil change.<span class="zh">已选择两项服务：换胎 + 换机油。</span></p>
+          <p class="combined-service-notice" id="combined-service-notice" role="status" aria-live="polite" hidden>Both services selected: Tire swap (on-rim only) + oil change.<span class="zh">已选择两项服务：换胎（限带轮毂）+ 换机油。</span></p>
         </section>
 
         <div class="divider"></div>
@@ -510,7 +510,7 @@
               <li><strong>Hub cleaning &amp; anti-seize</strong><span class="zh">轮毂接触面除锈清洁并涂抗卡死剂</span></li>
             </ul>
             <ul id="included-oil-list" hidden>
-              <li><strong>Oil &amp; filter replacement: $50 base labour</strong><span class="zh">更换机油及滤芯：基础人工费 $50</span></li>
+              <li><strong>Oil &amp; filter replacement: $50 labour</strong><span class="zh">更换机油及滤芯：人工费 $50</span></li>
               <li><strong>Sourcing &amp; pickup fee: +$20 (parts billed at receipt cost)</strong><span class="zh">+$20 代购跑腿费（零件费用按小票实报实销）</span></li>
               <li><strong>Used oil is collected for proper recycling</strong><span class="zh">旧机油将统一回收处理</span></li>
             </ul>
@@ -1277,7 +1277,7 @@
       const trustZh = document.createElement("p");
       trustZh.textContent = "已收到预约，上门前将通过短信/邮件再次确认。";
       const serviceLabel = serviceType === "both"
-        ? "Tire swap + oil change / 换胎 + 换机油"
+        ? "Tire swap (on-rim only) + oil change / 换胎（限带轮毂）+ 换机油"
         : serviceType === "oil" ? "Oil change / 换机油" : "Tire swap · on-rim only / 换胎 · 限带轮毂";
       const details = [
         `Service / 服务: ${serviceLabel}`,
@@ -1463,7 +1463,7 @@
       }
     }
 
-    // Both services have a $50 base labour rate; distance surcharges are the same.
+    // Both services have a $50 labour rate; distance surcharges are the same.
     // ≤10 km $50; 10–15 km +$10; >15 km not bookable.
     const MAX_SERVICE_KM = 15;
     let outOfRangeAddress = "";
