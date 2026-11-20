@@ -227,6 +227,14 @@
     .submit-button:hover { background: #183c2c; }
     .submit-button:focus-visible { outline: 3px solid rgba(49, 107, 80, .3); outline-offset: 2px; }
     .submit-button:disabled { background: #cfd2cc; color: #555a51; cursor: not-allowed; }
+    .travel-confirmation { margin-top: 20px; padding: 16px; border: 2px solid #a34a24; border-radius: 5px; background: #fff3e8; color: #723113; }
+    .travel-confirmation[hidden] { display: none; }
+    .travel-confirmation h2 { margin: 0 0 8px; font-size: 17px; line-height: 1.4; }
+    .travel-confirmation p { margin: 5px 0; font-size: 14px; line-height: 1.5; }
+    .travel-confirmation strong { font-size: 16px; }
+    .travel-confirmation:focus { outline: 3px solid rgba(163, 74, 36, .35); outline-offset: 3px; }
+    .travel-confirmation:not([hidden]) + .submit-row { justify-content: flex-end; margin-top: 8px; }
+    .travel-confirmation:not([hidden]) + .submit-row .submit-note { display: none; }
     .side-panel { overflow: hidden; }
     .side-image { position: relative; min-height: 204px; background: #25332b; }
     .side-image img { display: block; width: 100%; height: 204px; object-fit: cover; }
@@ -512,11 +520,17 @@
 
         <p class="form-error" id="form-error" role="alert"></p>
         <div class="confirmation" id="confirmation" role="status" aria-live="polite"></div>
-        <p class="cancellation-note">Need to cancel your appointment? Please call or text <a href="tel:+16136149806">613-614-9806</a>.<br><span class="zh">如需取消预约，请致电或短信 <a href="tel:+16136149806">613-614-9806</a>。</span></p>
+        <div class="travel-confirmation" id="travel-confirmation" role="alert" tabindex="-1" hidden>
+          <h2>Travel fee confirmation / 请确认远程费</h2>
+          <p id="travel-confirmation-distance"></p>
+          <p><strong>Travel surcharge: +$10 / 远程费：+$10</strong></p>
+          <p>No booking has been made yet. Press the button below to accept the fee and book.<br>预约尚未提交。请点击下方按钮接受远程费并确认预约。</p>
+        </div>
         <div class="submit-row" id="submit-row">
           <p class="submit-note">Your contact details and address are only used to arrange this appointment.<br>联系方式和地址仅用于安排本次预约。</p>
           <button class="submit-button" id="submit-button" type="submit">Book appointment / 确认预约 <span aria-hidden="true">→</span></button>
         </div>
+        <p class="cancellation-note">Need to cancel your appointment? Please call or text <a href="tel:+16136149806">613-614-9806</a>.<br><span class="zh">如需取消预约，请致电或短信 <a href="tel:+16136149806">613-614-9806</a>。</span></p>
       </form>
 
       <aside class="side-panel" aria-label="Appointment hours / 预约时段信息">
@@ -561,6 +575,8 @@
     const nextMonthButton = document.querySelector("#next-month");
     const confirmation = document.querySelector("#confirmation");
     const submitButton = document.querySelector("#submit-button");
+    const travelConfirmation = document.querySelector("#travel-confirmation");
+    const travelConfirmationDistance = document.querySelector("#travel-confirmation-distance");
     const formError = document.querySelector("#form-error");
     const homeAddress = document.querySelector("#home-address");
     const vehicleMakeSelect = document.querySelector("#vehicle-make");
@@ -1181,6 +1197,7 @@
     form.addEventListener("submit", async (event) => {
       event.preventDefault();
       if (bookingConfirmed || bookingSubmitting) return;
+      travelConfirmation.hidden = true;
       confirmation.classList.remove("visible");
       if (!tireServiceOption.checked && !oilServiceOption.checked) {
         formError.textContent = "Choose at least one service. / 请至少选择一项服务。";
@@ -1219,6 +1236,7 @@
       form.inert = true;
       formError.textContent = "Checking driving distance before booking… / 正在预约前核算驾车距离…";
       formError.classList.add("visible");
+      let focusTravelConfirmation = false;
       try {
       const addressAtSubmit = homeAddress.value.trim();
       clearTimeout(distanceTimer);
@@ -1243,8 +1261,10 @@
       }
       if (verifiedDistance > SURCHARGE_KM && acknowledgedTravelAddress !== addressAtSubmit) {
         acknowledgedTravelAddress = addressAtSubmit;
-        formError.textContent = `Driving distance: ${formatDistanceKm(verifiedDistance)} km. A $10 travel surcharge applies. Press Book appointment again to confirm. / 驾车距离 ${formatDistanceKm(verifiedDistance)} 公里，需加收 $10 远程费。请再次点击确认预约。`;
-        formError.classList.add("visible");
+        formError.classList.remove("visible");
+        travelConfirmationDistance.textContent = `Driving distance: ${formatDistanceKm(verifiedDistance)} km / 驾车距离：${formatDistanceKm(verifiedDistance)} 公里`;
+        travelConfirmation.hidden = false;
+        focusTravelConfirmation = true;
         return;
       }
       if (!selectedDate || !selectedTime) {
@@ -1434,6 +1454,7 @@
         form.inert = false;
         bookingSubmitting = false;
         submitButton.disabled = bookingConfirmed;
+        if (focusTravelConfirmation) travelConfirmation.focus();
       }
     });
 
@@ -1566,6 +1587,8 @@
     function chooseSuggestion(i) {
       const it = acItems[i];
       if (!it) return;
+      acknowledgedTravelAddress = "";
+      travelConfirmation.hidden = true;
       homeAddress.value = it.text;
       selectedPlaceId = it.placeId;
       selectedText = it.text;
@@ -1604,7 +1627,12 @@
     let checkedDistance = null;
 
     function formatDistanceKm(km) {
-      return km.toFixed(3).replace(/\.?0+$/, "");
+      const rounded = km.toFixed(1);
+      if (km > SURCHARGE_KM && Number(rounded) <= SURCHARGE_KM) {
+        const precise = km.toFixed(2);
+        return Number(precise) > SURCHARGE_KM ? precise : km.toFixed(3);
+      }
+      return rounded;
     }
 
     function showDistance(km) {
@@ -1634,6 +1662,7 @@
 
     homeAddress.addEventListener("input", () => {
       acknowledgedTravelAddress = "";
+      travelConfirmation.hidden = true;
       distanceRequestVersion++;
       checkedDistance = null;
       outOfRangeAddress = "";
