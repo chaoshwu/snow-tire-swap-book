@@ -245,13 +245,25 @@
     .service-scope { display: inline-flex; flex-direction: column; gap: 2px; max-width: 780px; margin-top: 17px; padding: 10px 14px 10px 12px; border-left: 3px solid var(--orange); background: #fff7ef; color: #9b4a28; font-size: 12px; line-height: 1.45; }
     .service-scope strong { font-size: 12px; }
     .service-scope .zh { color: #6b5a4c; font-weight: 500; }
-    .confirmation { display: none; margin-top: 16px; padding: 17px; border: 1px solid #b8d0b7; border-radius: 4px; background: var(--soft-green); }
+    .confirmation { display: none; margin-top: 12px; padding: 12px; border: 1px solid #b8d0b7; border-radius: 4px; background: var(--soft-green); }
     .confirmation.visible { display: block; }
-    .confirmation h2 { margin: 0 0 7px; font-size: 15px; }
-    .confirmation p { margin: 4px 0; color: #485148; font-size: 12px; line-height: 1.6; overflow-wrap: anywhere; }
-    .confirmation-callout { margin-top: 12px; padding: 12px 12px; border: 1px solid rgba(33, 75, 56, .18); border-left: 4px solid var(--green); border-radius: 4px; background: rgba(49, 107, 80, .08); }
-    .confirmation .confirmation-callout p { margin: 8px 0; color: var(--green-dark); font-weight: 800; }
-    .confirmation .demo-note { margin-top: 10px; color: var(--muted); font-size: 11px; }
+    .confirmation h2 { margin: 0 0 8px; font-size: 15px; }
+    .confirmation p { margin: 2px 0; color: #485148; font-size: 11px; line-height: 1.45; overflow-wrap: anywhere; }
+    .confirmation-summary { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 12px; row-gap: 5px; }
+    .confirmation-section { min-width: 0; }
+    .confirmation-section h3 { margin: 0 0 4px; color: var(--green-dark); font-size: 11px; }
+    .confirmation-details { display: grid; gap: 4px; margin: 0; }
+    .confirmation-details dt { display: none; }
+    .confirmation-details dd { margin: 0; color: var(--ink); font-size: 11px; line-height: 1.35; overflow-wrap: anywhere; }
+    .confirmation-translation { display: block; color: #5f6b60; font-size: 10px; }
+    .confirmation-callout { grid-column: 1 / -1; margin-top: 6px; padding: 7px 9px; border-left: 3px solid var(--green); background: rgba(49, 107, 80, .08); }
+    .confirmation .confirmation-callout p { margin: 2px 0; color: var(--green-dark); font-weight: 800; }
+    @media (max-width: 700px) { .confirmation-summary { grid-template-columns: 1fr; } }
+    @media print {
+      body * { visibility: hidden !important; }
+      .confirmation, .confirmation * { visibility: visible !important; }
+      .confirmation { position: absolute; left: 0; top: 0; width: 100%; margin: 0; padding: 10mm; box-shadow: none; break-inside: avoid; }
+    }
     .form-error { display: none; margin: 14px 0 0; color: #a33e28; font-size: 12px; }
     .form-error.visible { display: block; }
     .ac-wrap { position: relative; }
@@ -1231,11 +1243,9 @@
       const secondTime = needsSecondSlot
         ? `${String(Number(selectedTime.slice(0, 2)) + 1).padStart(2, "0")}:00`
         : selectedTime;
-      const dateText = `${monthNames[selectedDate.getMonth()]} ${selectedDate.getDate()}, ${selectedDate.getFullYear()} (${weekdayNames[selectedDate.getDay()]})`;
       const dateTextEn = `${monthNames[selectedDate.getMonth()].split(" /")[0]} ${selectedDate.getDate()}, ${selectedDate.getFullYear()} (${weekdayNames[selectedDate.getDay()].split(" /")[0]})`;
       const timeHour = Number(selectedTime.slice(0, 2));
       const timeText = `${timeHour % 12 || 12}:00 ${timeHour >= 12 ? "PM" : "AM"} / ${timeHour >= 12 ? "下午" : "上午"} ${timeHour % 12 || 12}:00`;
-      const timeTextEn = `${timeHour % 12 || 12}:00 ${timeHour >= 12 ? "PM" : "AM"}`;
       const endHour = timeHour + 2;
       const startSuffix = timeHour >= 12 ? "PM" : "AM";
       const endSuffix = endHour >= 12 ? "PM" : "AM";
@@ -1288,7 +1298,7 @@
         return;
       }
 
-      confirmation.innerHTML = "";
+      confirmation.replaceChildren();
       const heading = document.createElement("h2");
       heading.textContent = "✅ Booking confirmed / 预约已确认";
       const callout = document.createElement("div");
@@ -1297,34 +1307,71 @@
       trustEn.textContent = "Booking received. We'll text/email to reconfirm before your appointment.";
       const trustZh = document.createElement("p");
       trustZh.textContent = "已收到预约，上门前将通过短信/邮件再次确认。";
-      const serviceLabel = serviceType === "both"
-        ? "Tire swap (on-rim) + oil change / 换胎（限带轮毂）+ 换机油"
-        : serviceType === "oil" ? "Oil change / 换机油" : "Tire swap · on-rim / 换胎 · 限带轮毂";
-      const details = [
-        `Service / 服务: ${serviceLabel}`,
-        `Battery CCA test / 电瓶 CCA 检测: ${batteryCcaTest ? `+$${vehicle2 ? 20 : 10} (${vehicle2 ? "2 vehicles" : "1 vehicle"} × $10)` : "Not selected / 未选择"}`,
-        ...(vehicleText.length <= 1
-          ? [`Vehicle / 车辆: ${vehicleText[0]}`]
-          : vehicleText.map((text, index) => `Vehicle ${index + 1} / 车辆 ${index + 1}: ${text}`)),
-        ...vehiclePriceNotes.map(({ suffix, text }) => `${vehicle2 ? `Vehicle ${suffix || "1"} / 车辆 ${suffix || "1"}: ` : ""}${text}`),
-        ...(hasOilService ? [
-          ...(oilVin ? [`VIN: ${oilVin}`] : []),
-          `Materials / 材料: ${oilMaterials === "shop" ? "Sourcing & pickup fee +$20; parts billed at receipt cost / +$20代购跑腿费；零件费用按小票实报实销" : "Customer provided / 客户自备"}`,
-          "Used oil will be collected for proper recycling / 旧机油将统一回收处理"
-        ] : []),
-        `Address / 地点: ${address}`,
-        `Time / 时间: ${dateTextEn} ${isCombinedService ? timeRangeText : `${timeTextEn} / ${timeText.split(" / ")[1]}`}`,
-        `Contact / 联系人: ${data.get("customerName")} · ${data.get("customerPhone")}${customerEmail ? ` · ${customerEmail}` : ""}`
-      ];
       confirmation.append(heading);
-      details.forEach((text) => {
-        const line = document.createElement("p");
-        line.textContent = text;
-        confirmation.append(line);
-      });
+      const summary = document.createElement("div");
+      summary.className = "confirmation-summary";
+      function addConfirmationSection(title, rows) {
+        const section = document.createElement("section");
+        section.className = "confirmation-section";
+        const sectionHeading = document.createElement("h3");
+        sectionHeading.textContent = title;
+        const list = document.createElement("dl");
+        list.className = "confirmation-details";
+        rows.forEach(({ label, value, translation }) => {
+          const row = document.createElement("div");
+          const term = document.createElement("dt");
+          term.textContent = label;
+          const description = document.createElement("dd");
+          description.textContent = value;
+          if (translation) {
+            const translated = document.createElement("span");
+            translated.className = "confirmation-translation";
+            translated.textContent = translation;
+            description.append(translated);
+          }
+          row.append(term, description);
+          list.append(row);
+        });
+        section.append(sectionHeading, list);
+        summary.append(section);
+      }
+      const serviceNames = serviceType === "both"
+        ? ["Tire swap (on-rim) + oil change", "换胎（限带轮毂）+ 换机油"]
+        : serviceType === "oil" ? ["Oil change", "换机油"] : ["Tire swap · on-rim", "换胎 · 限带轮毂"];
+      const timeParts = (isCombinedService ? timeRangeText : timeText).split(" / ");
+      addConfirmationSection("Appointment / 预约", [
+        { label: "Date & time / 日期与时间", value: `${dateTextEn} · ${timeParts[0]}`, translation: timeParts[1] },
+        { label: "Address / 地址", value: address }
+      ]);
+      addConfirmationSection("Services / 服务", [
+        { label: "Selected / 已选择", value: serviceNames[0], translation: serviceNames[1] },
+        {
+          label: "Battery CCA test / 电瓶 CCA 检测",
+          value: batteryCcaTest ? `+$${vehicle2 ? 20 : 10} (${vehicle2 ? "2 vehicles" : "1 vehicle"} × $10)` : "Not selected",
+          translation: batteryCcaTest ? "" : "未选择"
+        },
+        ...(hasOilService ? [
+          { label: "Materials / 材料", value: oilMaterials === "shop" ? "Sourcing & pickup fee +$20; parts billed at receipt cost" : "Customer provided", translation: oilMaterials === "shop" ? "+$20 代购跑腿费；零件费用按小票实报实销" : "客户自备" },
+          { label: "Used oil / 旧机油", value: "Collected for proper recycling", translation: "旧机油将统一回收处理" }
+        ] : [])
+      ]);
+      addConfirmationSection("Vehicles / 车辆", [
+        ...vehicleText.map((text, index) => ({ label: vehicle2 ? `Vehicle ${index + 1} / 车辆 ${index + 1}` : "Vehicle / 车辆", value: text })),
+        ...vehiclePriceNotes.map(({ suffix, text }) => {
+          const [value, translation] = text.split(" / ");
+          return { label: vehicle2 ? `Vehicle ${suffix || "1"} surcharge / 车辆 ${suffix || "1"} 附加费` : "Vehicle surcharge / 车辆附加费", value, translation };
+        }),
+        ...(oilVin ? [{ label: "VIN", value: oilVin }] : [])
+      ]);
+      addConfirmationSection("Contact / 联系人", [
+        { label: "Name / 姓名", value: data.get("customerName") },
+        { label: "Phone / 电话", value: data.get("customerPhone") },
+        ...(customerEmail ? [{ label: "Email / 电子邮箱", value: customerEmail }] : [])
+      ]);
       callout.append(trustEn);
       callout.append(trustZh);
-      confirmation.append(callout);
+      summary.append(callout);
+      confirmation.append(summary);
       confirmation.classList.add("visible");
       confirmation.scrollIntoView({ behavior: "smooth", block: "nearest" });
       formError.classList.remove("visible");
