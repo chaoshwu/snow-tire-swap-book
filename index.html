@@ -976,9 +976,9 @@
       updateVehiclePriceNote("2");
       vehicleTrimLabel.classList.add("visually-hidden");
       vehicleTrimInput.required = isOilChange;
-      vehicleTrimInput.placeholder = isOilChange ? "Engine size / 发动机排量（如 2.5L）" : "Trim / 配置";
+      vehicleTrimInput.placeholder = isOilChange ? "2.5L / 3.0L" : "Trim / 配置";
       vehicleTrimInput.setAttribute("aria-label", isOilChange ? "Engine size / 发动机排量" : "Trim / 配置");
-      vehicleTrimLabelEn.textContent = isOilChange ? "Engine" : "Trim";
+      vehicleTrimLabelEn.textContent = isOilChange ? "2.5L / 3.0L" : "Trim";
       vehicleCountField.hidden = !isTireChange || isOilChange;
       vehicleCountSelect.disabled = !isTireChange || isOilChange;
       vehicleCard1Title.hidden = !isTireChange || isOilChange;
@@ -1255,7 +1255,7 @@
       const vehicleText = [vehicle1, vehicle2].filter(Boolean).map((vehicle) => [vehicle.year, vehicle.make, vehicle.model, vehicle.trim].filter(Boolean).join(" "));
       const vehiclePriceNotes = ["", ...(vehicle2 ? ["2"] : [])].map((suffix) => {
         const status = vehicleSurchargeStatus(data.get(`makeChoice${suffix}`), data.get(`modelChoice${suffix}`));
-        return { suffix, text: vehicleSurchargeMessage(status) };
+        return { suffix, status, text: vehicleSurchargeMessage(status) };
       }).filter((note) => note.text);
       const customerEmail = String(data.get("customerEmail") || "").trim();
 
@@ -1341,28 +1341,35 @@
       const timeParts = (isCombinedService ? timeRangeText : timeText).split(" / ");
       addConfirmationSection("Appointment / 预约", [
         { label: "Date & time / 日期与时间", value: `${dateTextEn} · ${timeParts[0]}`, translation: timeParts[1] },
-        { label: "Address / 地址", value: address }
+        { label: "Address / 地址", value: `Address / 地址: ${address}` },
+        ...(checkedDistance?.address === String(address).trim() && checkedDistance.km > SURCHARGE_KM && checkedDistance.km <= MAX_SERVICE_KM
+          ? [{
+            label: "Travel surcharge / 远程费",
+            value: `${checkedDistance.km.toFixed(1)} km — +$10 travel surcharge`,
+            translation: `${checkedDistance.km.toFixed(1)} 公里 — 远程费 +$10`
+          }]
+          : [])
       ]);
       addConfirmationSection("Services / 服务", [
         { label: "Selected / 已选择", value: serviceNames[0], translation: serviceNames[1] },
         {
           label: "Battery CCA test / 电瓶 CCA 检测",
-          value: batteryCcaTest ? `+$${vehicle2 ? 20 : 10} total ($10/vehicle)` : "Not selected",
+          value: batteryCcaTest ? `Battery CCA test: +$10/vehicle, +$${vehicle2 ? 20 : 10} total` : "Battery CCA test: Not selected",
           translation: batteryCcaTest
-            ? `每辆车 $10，共 $${vehicle2 ? 20 : 10}（${vehicle2 ? "2 辆车" : "1 辆车"}）`
-            : "未选择"
+            ? `电瓶 CCA 检测：每辆车 $10，共 $${vehicle2 ? 20 : 10}`
+            : "电瓶 CCA 检测：未选择"
         },
         ...(hasOilService ? [
-          { label: "Materials / 材料", value: oilMaterials === "shop" ? "Sourcing & pickup fee +$20; parts billed at receipt cost" : "Customer provided", translation: oilMaterials === "shop" ? "+$20 代购跑腿费；零件费用按小票实报实销" : "客户自备" },
-          { label: "Used oil / 旧机油", value: "Collected for proper recycling", translation: "旧机油将统一回收处理" }
+          { label: "Materials / 材料", value: oilMaterials === "shop" ? "Sourcing & pickup fee +$20; parts billed at receipt cost" : "Customer provided", translation: oilMaterials === "shop" ? "+$20 代购跑腿费；零件费用按小票实报实销" : "客户自备" }
         ] : [])
       ]);
       addConfirmationSection("Vehicles / 车辆", [
         ...vehicleText.map((text, index) => ({ label: vehicle2 ? `Vehicle ${index + 1} / 车辆 ${index + 1}` : "Vehicle / 车辆", value: text })),
-        ...vehiclePriceNotes.map(({ suffix, text }) => {
-          const [value, translation] = text.split(" / ");
-          return { label: vehicle2 ? `Vehicle ${suffix || "1"} surcharge / 车辆 ${suffix || "1"} 附加费` : "Vehicle surcharge / 车辆附加费", value, translation };
-        }),
+        ...vehiclePriceNotes.map(({ suffix, status }) => ({
+          label: vehicle2 ? `Vehicle ${suffix || "1"} type / 车辆 ${suffix || "1"} 车型` : "Vehicle type / 车型",
+          value: status === "surcharge" ? "Larger SUV or minivan" : "Eligibility to be confirmed",
+          translation: status === "surcharge" ? "中大型 SUV 或 MPV" : "车辆是否符合服务条件需确认"
+        })),
         ...(oilVin ? [{ label: "VIN", value: oilVin }] : [])
       ]);
       addConfirmationSection("Contact / 联系人", [
