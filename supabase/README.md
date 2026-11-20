@@ -40,7 +40,7 @@ Deploy the updated `smooth-api` function after the database migration so shop no
 
 Run `supabase/migrations/20261115_booking_fee_notifications.sql` in the SQL Editor **after** the combined-service migration. Deploy the updated `smooth-api` Edge Function next, then publish the updated booking page. The new page requires `create_appointment_v5`; publishing it before the migration will prevent bookings.
 
-The notification includes the per-vehicle surcharge and whether a travel fee applies, without showing the driving distance. Unrecognized vehicles and missing or invalid distance details default to no surcharge; only recognized surcharged vehicles and a reported distance over 10 km show a fee. These values come from the browser and are not server-verified prices or payments. Existing bookings are not modified or backfilled.
+The notification includes the per-vehicle surcharge and whether a travel fee applies, without showing the driving distance. Unrecognized vehicles default to no surcharge. A missing or invalid distance is reported as requiring confirmation, not as free travel. The booking page recalculates the driving distance at submission and blocks bookings when it cannot verify the address or the distance exceeds 15 km. For distances over 10 km, it displays the $10 travel fee and requires the customer to submit again before booking. Deploy the updated `smooth-api` function to apply the notification change. These values come from the browser and are not server-verified prices or payments. Existing bookings are not modified or backfilled.
 
 ### Battery CCA test add-on
 

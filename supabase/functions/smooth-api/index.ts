@@ -147,9 +147,9 @@ Deno.serve(async (request: Request) => {
     : typeof rawDistance === "string" && rawDistance.trim() !== "" ? Number(rawDistance) : NaN;
   emailDetails.push({
     label: "Travel fee",
-    value: Number.isFinite(distance) && distance > 10 && distance <= 15
-      ? "+$10"
-      : "No travel fee",
+    value: !Number.isFinite(distance) || distance < 0 || distance > 15
+      ? "Distance not verified — travel fee requires confirmation"
+      : distance > 10 ? "+$10" : "No travel fee",
   });
   const ccaTestVehicleCount = appointment.vehicle_2_year ? 2 : 1;
   emailDetails.push({

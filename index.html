@@ -595,6 +595,8 @@
       ? window.supabase.createClient(supabaseConfig.url, supabaseConfig.anonKey)
       : null;
     let selectedDate = null;
+    let bookingSubmitting = false;
+    let acknowledgedTravelAddress = "";
     let selectedTime = null;
     let timeRenderVersion = 0;
     let vehicleCount = 1;
@@ -1178,7 +1180,7 @@
 
     form.addEventListener("submit", async (event) => {
       event.preventDefault();
-      if (bookingConfirmed) return;
+      if (bookingConfirmed || bookingSubmitting) return;
       confirmation.classList.remove("visible");
       if (!tireServiceOption.checked && !oilServiceOption.checked) {
         formError.textContent = "Choose at least one service. / 请至少选择一项服务。";
@@ -1201,11 +1203,6 @@
         formError.classList.add("visible");
         return;
       }
-      if (outOfRangeAddress && outOfRangeAddress === homeAddress.value.trim()) {
-        formError.textContent = "This address is outside our service area. Please contact us directly. / 该地址超出服务范围，请直接联系我们。";
-        formError.classList.add("visible");
-        return;
-      }
       if (!selectedDate || !selectedTime) {
         formError.textContent = "Select an available appointment date and time. / 请选择可预约日期和时间。";
         formError.classList.add("visible");
@@ -1217,6 +1214,44 @@
         return;
       }
 
+      bookingSubmitting = true;
+      submitButton.disabled = true;
+      form.inert = true;
+      formError.textContent = "Checking driving distance before booking… / 正在预约前核算驾车距离…";
+      formError.classList.add("visible");
+      try {
+      const addressAtSubmit = homeAddress.value.trim();
+      clearTimeout(distanceTimer);
+      clearTimeout(acTimer);
+      acSeq++;
+      closeSuggestions();
+      if (selectedPlaceId && selectedText.trim() === addressAtSubmit) {
+        await checkPlaceDistance(selectedPlaceId, selectedText);
+      } else {
+        await checkDrivingDistance(addressAtSubmit, true, true);
+      }
+      if (homeAddress.value.trim() !== addressAtSubmit || !checkedDistance || checkedDistance.address !== addressAtSubmit) {
+        formError.textContent = "We could not verify the driving distance. Check your address and try again. No booking was made. / 无法确认驾车距离，请核对地址后重试；预约尚未提交。";
+        formError.classList.add("visible");
+        return;
+      }
+      const verifiedDistance = checkedDistance.km;
+      if (verifiedDistance > MAX_SERVICE_KM) {
+        formError.textContent = "This address is outside our service area. Please contact us directly. / 该地址超出服务范围，请直接联系我们。";
+        formError.classList.add("visible");
+        return;
+      }
+      if (verifiedDistance > SURCHARGE_KM && acknowledgedTravelAddress !== addressAtSubmit) {
+        acknowledgedTravelAddress = addressAtSubmit;
+        formError.textContent = `Driving distance: ${formatDistanceKm(verifiedDistance)} km. A $10 travel surcharge applies. Press Book appointment again to confirm. / 驾车距离 ${formatDistanceKm(verifiedDistance)} 公里，需加收 $10 远程费。请再次点击确认预约。`;
+        formError.classList.add("visible");
+        return;
+      }
+      if (!selectedDate || !selectedTime) {
+        formError.textContent = "Your selected time is no longer available. Please choose another time. / 所选时段已不可用，请重新选择。";
+        formError.classList.add("visible");
+        return;
+      }
       const data = new FormData(form);
       const location = data.get("location");
       const address = data.get("homeAddress");
@@ -1281,7 +1316,7 @@
         p_oil_materials: oilMaterials || null,
         p_fee_vehicle_1_status: vehicleSurchargeStatus(data.get("makeChoice"), data.get("modelChoice")),
         p_fee_vehicle_2_status: vehicle2 ? vehicleSurchargeStatus(data.get("makeChoice2"), data.get("modelChoice2")) : null,
-        p_fee_distance_km: checkedDistance && checkedDistance.address === String(address).trim() ? checkedDistance.km : null,
+        p_fee_distance_km: verifiedDistance,
         p_battery_cca_test: batteryCcaTest
       });
 
@@ -1342,11 +1377,11 @@
       addConfirmationSection("Appointment / 预约", [
         { label: "Date & time / 日期与时间", value: `${dateTextEn} · ${timeParts[0]}`, translation: timeParts[1] },
         { label: "Address / 地址", value: `Address / 地址: ${address}` },
-        ...(checkedDistance?.address === String(address).trim() && checkedDistance.km > SURCHARGE_KM && checkedDistance.km <= MAX_SERVICE_KM
+        ...(verifiedDistance > SURCHARGE_KM
           ? [{
             label: "Travel surcharge / 远程费",
-            value: `${checkedDistance.km.toFixed(1)} km — +$10 travel surcharge`,
-            translation: `${checkedDistance.km.toFixed(1)} 公里 — 远程费 +$10`
+            value: `${formatDistanceKm(verifiedDistance)} km — +$10 travel surcharge`,
+            translation: `${formatDistanceKm(verifiedDistance)} 公里 — 远程费 +$10`
           }]
           : [])
       ]);
@@ -1389,6 +1424,17 @@
         submitButton.disabled = true;
       }
       await renderTimes(selectedDate);
+      } catch (error) {
+        console.error("Booking submission failed:", error);
+        if (!bookingConfirmed) {
+          formError.textContent = "We could not confirm whether the booking was saved. Please contact us before retrying. / 无法确认预约是否保存，请在重试前联系我们。";
+          formError.classList.add("visible");
+        }
+      } finally {
+        form.inert = false;
+        bookingSubmitting = false;
+        submitButton.disabled = bookingConfirmed;
+      }
     });
 
     addYearOptions();
@@ -1425,6 +1471,16 @@
     let selectedPlaceId = "";
     let selectedText = "";
     let distanceRequestVersion = 0;
+
+    async function fetchRoute(options) {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 15000);
+      try {
+        return await fetch("https://routes.googleapis.com/directions/v2:computeRoutes", { ...options, signal: controller.signal });
+      } finally {
+        clearTimeout(timeout);
+      }
+    }
 
     function closeSuggestions() {
       acList.hidden = true;
@@ -1525,7 +1581,7 @@
       const apiKey = (window.MAPS_CONFIG || {}).apiKey;
       showBadge("checking", `${icons.spin} Checking driving distance… / 正在计算驾车距离…`);
       try {
-        const res = await fetch("https://routes.googleapis.com/directions/v2:computeRoutes", {
+        const res = await fetchRoute({
           method: "POST",
           headers: { "Content-Type": "application/json", "X-Goog-Api-Key": apiKey, "X-Goog-FieldMask": "routes.distanceMeters" },
           body: JSON.stringify({ origin: { address: SERVICE_ORIGIN }, destination: { placeId }, travelMode: "DRIVE" })
@@ -1534,7 +1590,7 @@
         const data = res.ok ? await res.json() : null;
         if (requestVersion !== distanceRequestVersion || selectedPlaceId !== placeId || homeAddress.value !== text) return;
         const route = data && data.routes && data.routes[0];
-        if (!route || typeof route.distanceMeters !== "number") { showUnknown(); return; }
+        if (!route || !Number.isFinite(route.distanceMeters) || route.distanceMeters < 0) { showUnknown(); return; }
         showDistance(route.distanceMeters / 1000);
       } catch (e) {
         if (requestVersion === distanceRequestVersion && selectedPlaceId === placeId && homeAddress.value === text) showUnknown();
@@ -1547,8 +1603,12 @@
     let outOfRangeAddress = "";
     let checkedDistance = null;
 
+    function formatDistanceKm(km) {
+      return km.toFixed(3).replace(/\.?0+$/, "");
+    }
+
     function showDistance(km) {
-      const kmStr = km.toFixed(1);
+      const kmStr = formatDistanceKm(km);
       outOfRangeAddress = "";
       checkedDistance = { address: homeAddress.value.trim(), km };
       if (km <= SURCHARGE_KM) {
@@ -1573,6 +1633,7 @@
     });
 
     homeAddress.addEventListener("input", () => {
+      acknowledgedTravelAddress = "";
       distanceRequestVersion++;
       checkedDistance = null;
       outOfRangeAddress = "";
@@ -1612,6 +1673,7 @@
     });
 
     function finalizeAddress() {
+      if (bookingSubmitting) return;
       clearTimeout(distanceTimer);
       clearTimeout(acTimer);
       const val = homeAddress.value.trim();
@@ -1634,13 +1696,13 @@
     homeAddress.addEventListener("change", finalizeAddress);
     homeAddress.addEventListener("blur", finalizeAddress);
 
-    async function checkDrivingDistance(rawAddress, isFinal = false) {
-      if (rawAddress === lastCheckedAddr && distanceBadge.classList.contains("visible")) return;
+    async function checkDrivingDistance(rawAddress, isFinal = false, force = false) {
+      if (!force && rawAddress === lastCheckedAddr && distanceBadge.classList.contains("visible")) return;
       const requestVersion = ++distanceRequestVersion;
       checkedDistance = null;
       outOfRangeAddress = "";
       const apiKey = (window.MAPS_CONFIG || {}).apiKey;
-      if (!apiKey || apiKey === "YOUR_GOOGLE_MAPS_API_KEY") return;
+      if (!apiKey || apiKey === "YOUR_GOOGLE_MAPS_API_KEY") { if (isFinal) showUnknown(); return; }
 
       const words = rawAddress.split(/\s+/).filter(Boolean);
       // 地址结构不完整（比如没有数字门牌号，或者只有一个残缺单词）
@@ -1663,7 +1725,7 @@
         : rawAddress;
 
       try {
-        const response = await fetch("https://routes.googleapis.com/directions/v2:computeRoutes", {
+        const response = await fetchRoute({
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -1686,7 +1748,7 @@
         const data = await response.json();
         if (requestVersion !== distanceRequestVersion || homeAddress.value.trim() !== rawAddress) return;
         const route = data.routes && data.routes[0];
-        if (!route || typeof route.distanceMeters !== "number") {
+        if (!route || !Number.isFinite(route.distanceMeters) || route.distanceMeters < 0) {
           if (isFinal) showUnknown(); else distanceBadge.className = "distance-badge";
           return;
         }
@@ -1725,7 +1787,7 @@
     function showUnknown() {
       checkedDistance = null;
       showBadge("unknown",
-        `${icons.help} Address not recognized — distance will be confirmed after booking / 地址无法识别，预约后我们将确认距离`);
+        `${icons.help} Unable to verify driving distance — check the address and try again / 无法确认驾车距离，请核对地址后重试`);
     }
     /* ── End distance check ──────────────────────────────────────── */
   </script>
