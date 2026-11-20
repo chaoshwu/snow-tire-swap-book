@@ -1407,13 +1407,11 @@
       ]);
       addConfirmationSection("Services / 服务", [
         { label: "Selected / 已选择", value: serviceNames[0], translation: serviceNames[1] },
-        {
+        ...(batteryCcaTest ? [{
           label: "Battery CCA test / 电瓶 CCA 检测",
-          value: batteryCcaTest ? `Battery CCA test: +$10/vehicle, +$${vehicle2 ? 20 : 10} total` : "Battery CCA test: Not selected",
-          translation: batteryCcaTest
-            ? `电瓶 CCA 检测：每辆车 $10，共 $${vehicle2 ? 20 : 10}`
-            : "电瓶 CCA 检测：未选择"
-        },
+          value: `Battery CCA test: +$10/vehicle, +$${vehicle2 ? 20 : 10} total`,
+          translation: `电瓶 CCA 检测：每辆车 $10，共 $${vehicle2 ? 20 : 10}`
+        }] : []),
         ...(hasOilService ? [
           { label: "Materials / 材料", value: oilMaterials === "shop" ? "Sourcing & pickup fee +$20; parts billed at receipt cost" : "Customer provided", translation: oilMaterials === "shop" ? "+$20 代购跑腿费；零件费用按小票实报实销" : "客户自备" }
         ] : [])
