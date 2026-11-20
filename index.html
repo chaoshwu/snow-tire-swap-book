@@ -976,9 +976,9 @@
       updateVehiclePriceNote("2");
       vehicleTrimLabel.classList.add("visually-hidden");
       vehicleTrimInput.required = isOilChange;
-      vehicleTrimInput.placeholder = isOilChange ? "Trim / 配置（2.5L）" : "Trim / 配置";
-      vehicleTrimInput.setAttribute("aria-label", "Trim");
-      vehicleTrimLabelEn.textContent = "Trim";
+      vehicleTrimInput.placeholder = isOilChange ? "Engine size / 发动机排量（如 2.5L）" : "Trim / 配置";
+      vehicleTrimInput.setAttribute("aria-label", isOilChange ? "Engine size / 发动机排量" : "Trim / 配置");
+      vehicleTrimLabelEn.textContent = isOilChange ? "Engine" : "Trim";
       vehicleCountField.hidden = !isTireChange || isOilChange;
       vehicleCountSelect.disabled = !isTireChange || isOilChange;
       vehicleCard1Title.hidden = !isTireChange || isOilChange;
@@ -1347,8 +1347,10 @@
         { label: "Selected / 已选择", value: serviceNames[0], translation: serviceNames[1] },
         {
           label: "Battery CCA test / 电瓶 CCA 检测",
-          value: batteryCcaTest ? `+$${vehicle2 ? 20 : 10} (${vehicle2 ? "2 vehicles" : "1 vehicle"} × $10)` : "Not selected",
-          translation: batteryCcaTest ? "" : "未选择"
+          value: batteryCcaTest ? `+$${vehicle2 ? 20 : 10} total ($10/vehicle)` : "Not selected",
+          translation: batteryCcaTest
+            ? `每辆车 $10，共 $${vehicle2 ? 20 : 10}（${vehicle2 ? "2 辆车" : "1 辆车"}）`
+            : "未选择"
         },
         ...(hasOilService ? [
           { label: "Materials / 材料", value: oilMaterials === "shop" ? "Sourcing & pickup fee +$20; parts billed at receipt cost" : "Customer provided", translation: oilMaterials === "shop" ? "+$20 代购跑腿费；零件费用按小票实报实销" : "客户自备" },
